@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Panel de Imágenes</title>
+  <link rel="stylesheet" href="panel.css">
+  <style>
+    .panel-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    .seccion {
+      background: #f5f5f5;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+    }
+    
+    .galeria-imagenes {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+    
+    .imagen-item {
+      position: relative;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: transform 0.2s ease;
+    }
+    
+    .imagen-item:hover {
+      transform: translateY(-2px);
+    }
+    
+    .imagen-preview {
+      width: 100%;
+      height: 150px;
+      object-fit: cover;
+      display: block;
+    }
+    
+    .imagen-info {
+      padding: 10px;
+      text-align: center;
+    }
+    
+    .imagen-nombre {
+      font-size: 12px;
+      color: #666;
+      word-break: break-all;
+      margin-bottom: 8px;
+    }
+    
+    .boton-eliminar {
+      background: #ff4444;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: background 0.2s ease;
+    }
+    
+    .boton-eliminar:hover {
+      background: #cc0000;
+    }
+    
+    .selector-sector {
+      margin-bottom: 15px;
+    }
+    
+    .selector-sector select {
+      padding: 8px 12px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+    
+    .cargando {
+      text-align: center;
+      color: #666;
+      font-style: italic;
+      padding: 20px;
+    }
+    
+    .sin-imagenes {
+      text-align: center;
+      color: #999;
+      padding: 40px;
+      font-style: italic;
+    }
+    
+    .contador-imagenes {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+    
+    .botones-sectores {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    
+    .boton-sector {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+    
+    .boton-sector:hover {
+      background: #0056b3;
+    }
+    
+    .boton-refrescar {
+      background: #28a745;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-left: 10px;
+    }
+    
+    .boton-refrescar:hover {
+      background: #218838;
+    }
+  </style>
+</head>
+<body>
+  <div class="panel-container">
+    <!-- Sección de subir imágenes -->
+    <div class="seccion">
+      <h2>Subir Imagen a un Sector</h2>
+      <form id="formularioImagen" enctype="multipart/form-data">
+        <input type="file" name="imagen" accept="image/*" required>
+        <select name="sector" required>
+          <option value="" disabled selected>Seleccionar Sector</option>
+          <option value="ENVASE">Envase</option>
+          <option value="GUARDIA">Guardia</option>
+          <option value="PRODUCCION">Producción</option>
+        </select>
+        <button type="submit">Subir Imagen</button>
+      </form>
+      <div id="mensaje"></div>
+    </div>
+
+    <!-- Sección de visualización rápida -->
+    <div class="seccion seccion-visualizar">
+      <h2>Visualizar Imágenes por Sector</h2>
+      <div class="botones-sectores">
+        <button class="boton-sector" onclick="verSector('ENVASE')">
+          Ver Sector Envase
+        </button>
+        <button class="boton-sector" onclick="verSector('GUARDIA')">
+          Ver Sector Guardia
+        </button>
+        <button class="boton-sector" onclick="verSector('PRODUCCION')">
+          Ver Sector Producción
+        </button>
+      </div>
+    </div>
+
+    <!-- Nueva sección para gestionar imágenes -->
+    <div class="seccion">
+      <h2>Gestionar Imágenes</h2>
+      <div class="selector-sector">
+        <select id="selectorSectorGestion" onchange="cargarImagenesGestion()">
+          <option value="">Seleccionar sector para gestionar</option>
+          <option value="ENVASE">Envase</option>
+          <option value="GUARDIA">Guardia</option>
+          <option value="PRODUCCION">Producción</option>
+        </select>
+        <button class="boton-refrescar" onclick="cargarImagenesGestion()">🔄 Refrescar</button>
+      </div>
+      
+      <div id="contadorImagenes" class="contador-imagenes" style="display: none;"></div>
+      <div id="galeriaImagenes" class="galeria-imagenes"></div>
+    </div>
+  </div>
+
+  <script>
+    // Variables globales
+    let imagenesActuales = [];
+    let sectorActual = '';
+
+    // Verificar autenticación al cargar la página
+    document.addEventListener("DOMContentLoaded", async() => {
+      try {
+        const response = await fetch("http://localhost:8080/api/user", {
+          credentials: "include"
+        });
+        console.log("Estado sesión:" + response.status);
+        if (!response.ok) {
+          window.location.href = "login.html";
+          return;
+        }
+      } catch (error) {
+        console.error("Error al verificar la sesión:", error);
+        window.location.href = "login.html";
+      }
+    });
+
+    // Manejo del formulario de subida
+    document.getElementById('formularioImagen').addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      const formData = new FormData(this);
+      const archivo = formData.get('imagen');
+      const sector = formData.get('sector');
+
+      // Validar tamaño del archivo (10MB)
+      if (archivo.size > 10 * 1024 * 1024) {
+        document.getElementById('mensaje').innerText = 'El archivo debe ser menor a 10 MB';
+        return;
+      }
+
+      console.log("Sector seleccionado:", sector);
+
+      fetch('http://localhost:8080/api/imagenes', {
+        method: 'POST',
+        body: formData,
+        credentials: "include"
+      })
+      .then(res => {
+        if (!res.ok) {
+          throw new Error(`Error HTTP: ${res.status}`);
+        }
+        return res.text();
+      })
+      .then(msg => {
+        const enlace = `<br><a href="sector.html?sector=${sector}" target="_blank">Ver imágenes del sector ${sector}</a>`;
+        document.getElementById('mensaje').innerHTML = msg + enlace;
+        console.log('Enlace generado:', `sector.html?sector=${sector}`);
+        this.reset();
+        
+        // Si estamos viendo el mismo sector en gestión, refrescar
+        if (sectorActual === sector) {
+          cargarImagenesGestion();
+        }
+      })
+      .catch(err => {
+        document.getElementById('mensaje').innerText = 'Error al subir la imagen';
+        console.error(err);
+      });
+    });
+
+    // Función para abrir la visualización de un sector específico
+    function verSector(sector) {
+      const url = `sector.html?sector=${sector}`;
+      window.open(url, '_blank');
+      
+      const mensajeDiv = document.getElementById('mensaje');
+      mensajeDiv.innerHTML = `Abriendo visualización del sector ${sector}...`;
+      
+      setTimeout(() => {
+        mensajeDiv.innerHTML = '';
+      }, 3000);
+    }
+
+    // Función para cargar imágenes para gestión
+    async function cargarImagenesGestion() {
+    const selector = document.getElementById('selectorSectorGestion');
+    const sector = selector.value;
+    const galeria = document.getElementById('galeriaImagenes');
+    const contador = document.getElementById('contadorImagenes');
+
+    if (!sector) {
+        galeria.innerHTML = '';
+        contador.style.display = 'none';
+        return;
+    }
+
+    sectorActual = sector;
+    galeria.innerHTML = '<div class="cargando">Cargando imágenes...</div>';
+    contador.style.display = 'none';
+
+    try {
+        const response = await fetch(`http://localhost:8080/api/imagenes/${sector}`, {
+            credentials: "include"
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status}`);
+        }
+
+        // Ahora recibimos objetos, no strings de rutas
+        const imagenesData = await response.json();
+        imagenesActuales = imagenesData;
+
+        if (imagenesData.length === 0) {
+            galeria.innerHTML = '<div class="sin-imagenes">No hay imágenes en este sector</div>';
+            contador.style.display = 'none';
+            return;
+        }
+
+        // Mostrar contador
+        contador.textContent = `${imagenesData.length} imagen${imagenesData.length !== 1 ? 's' : ''} encontrada${imagenesData.length !== 1 ? 's' : ''}`;
+        contador.style.display = 'block';
+
+        // Crear galería - USANDO OBJETOS, NO STRINGS
+        galeria.innerHTML = '';
+        imagenesData.forEach((imagen, index) => {
+            const imagenDiv = document.createElement('div');
+            imagenDiv.className = 'imagen-item';
+            
+            const urlCompleta = `http://localhost:8080${imagen.ruta}`;
+            
+            imagenDiv.innerHTML = `
+                <img src="${urlCompleta}" alt="Imagen ${index + 1}" class="imagen-preview" 
+                     onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkVycm9yIGFsIGNhcmdhcjwvdGV4dD48L3N2Zz4='">
+                <div class="imagen-info">
+                    <div class="imagen-nombre">${imagen.nombreArchivo}</div>
+                    <button class="boton-eliminar" onclick="eliminarImagenPorId(${imagen.id}, '${imagen.nombreArchivo}')">
+                        🗑️ Eliminar
+                    </button>
+                </div>
+            `;
+            
+            galeria.appendChild(imagenDiv);
+        });
+
+    } catch (error) {
+        console.error('Error al cargar imágenes:', error);
+        galeria.innerHTML = '<div class="sin-imagenes">Error al cargar las imágenes del sector</div>';
+        contador.style.display = 'none';
+    }
+}
+
+    // Función para eliminar imagen por ID
+    async function eliminarImagenPorId(imagenId, nombreArchivo) {
+    if (!confirm(`¿Estás seguro de que quieres eliminar "${nombreArchivo}"?`)) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`http://localhost:8080/api/imagenes/${imagenId}`, {
+            method: 'DELETE',
+            credentials: "include"
+        });
+
+        if (!response.ok) {
+            if (response.status === 404) {
+                throw new Error('Imagen no encontrada');
+            }
+            throw new Error(`Error HTTP: ${response.status}`);
+        }
+
+        const resultado = await response.json();
+        console.log('Imagen eliminada:', resultado.message);
+
+        // Refrescar la galería
+        cargarImagenesGestion();
+
+        // Mostrar mensaje de éxito
+        mostrarMensaje('Imagen eliminada correctamente', 'success');
+
+    } catch (error) {
+        console.error('Error al eliminar imagen:', error);
+        mostrarMensaje(`Error al eliminar la imagen: ${error.message}`, 'error');
+    }
+} 
+
+    // Función para mostrar mensajes
+    function mostrarMensaje(texto, tipo) {
+      const mensajeDiv = document.getElementById('mensaje');
+      if (mensajeDiv) {
+        const color = tipo === 'success' ? 'green' : 'red';
+        mensajeDiv.innerHTML = `<span style="color: ${color};">${texto}</span>`;
+        
+        setTimeout(() => {
+            mensajeDiv.innerHTML = '';
+        }, 3000);
+    } else {
+        console.log(`${tipo.toUpperCase()}: ${texto}`);
+        alert(`${texto}`);
+    }
+}
+
+
+
+    // Función para eliminar una imagen
+    async function eliminarImagen(rutaImagen, index) {
+    const nombreArchivo = rutaImagen.split('/').pop(); // Extraer nombre del archivo
+    
+    if (!confirm(`¿Estás seguro de que quieres eliminar "${nombreArchivo}"?`)) {
+        return;
+    }
+
+    try {
+        // 1. Primero obtener todas las imágenes del sector para encontrar el ID
+        const sectorSeleccionado = document.getElementById('selectorSectorGestion').value;
+        const responseImagenes = await fetch(`http://localhost:8080/api/imagenes/${sectorSeleccionado}`, {
+            credentials: "include"
+        });
+        
+        if (!responseImagenes.ok) {
+            throw new Error('Error al obtener imágenes del sector');
+        }
+        
+        const imagenes = await responseImagenes.json();
+        
+        // 2. Buscar la imagen por nombre de archivo
+        const imagen = imagenes.find(img => {
+            // Comparar solo el nombre del archivo, no la ruta completa
+            const nombreImagen = img.ruta ? img.ruta.split('/').pop() : img.nombreArchivo;
+            return nombreImagen === nombreArchivo;
+        });
+        
+        if (!imagen || !imagen.id) {
+            throw new Error('No se pudo encontrar el ID de la imagen');
+        }
+
+        // 3. Eliminar usando el ID encontrado
+        const response = await fetch(`http://localhost:8080/api/imagenes/${imagen.id}`, {
+            method: 'DELETE',
+            credentials: "include"
+        });
+
+        if (!response.ok) {
+            if (response.status === 404) {
+                throw new Error('Imagen no encontrada');
+            }
+            throw new Error(`Error HTTP: ${response.status}`);
+        }
+
+        const resultado = await response.json();
+        console.log('Imagen eliminada:', resultado.message);
+
+        // Refrescar la galería
+        cargarImagenesGestion();
+
+        // Mostrar mensaje de éxito
+        mostrarMensaje('Imagen eliminada correctamente', 'success');
+
+    } catch (error) {
+        console.error('Error al eliminar imagen:', error);
+        mostrarMensaje(`Error al eliminar la imagen: ${error.message}`, 'error');
+    }
+}
+  </script>
+</body>
+</html>

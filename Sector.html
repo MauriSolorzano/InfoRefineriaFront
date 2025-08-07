@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title id="titulo">Sector</title>
+  <style>
+    body {
+      background: black;
+      color: white;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+      overflow: hidden;
+    }
+
+    #imagenes {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .imagen-pantalla-completa {
+      width: 100vw;
+      height: 100vh;
+      object-fit: contain;
+      transition: opacity 0.5s ease;
+    }
+
+    .mensaje-error {
+      color: #ff6b6b;
+      padding: 20px;
+      font-size: 18px;
+    }
+
+    /* Animaciones suaves entre imágenes */
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .imagen-pantalla-completa {
+      animation: fadeIn 0.5s ease;
+    }
+  </style>
+</head>
+<body>
+  <div id="imagenes"></div>
+
+  <script>
+    let imagenes = [];
+    let indiceActual = 0;
+    let autoplayInterval = null;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const sector = urlParams.get('sector') || 'ENVASE';
+    
+    document.getElementById('titulo').textContent = `Sector ${sector}`;
+
+    // Verificar autenticación antes de cargar imágenes
+    document.addEventListener("DOMContentLoaded", async() => {
+      try {
+        const response = await fetch("http://localhost:8080/api/user", {
+          credentials: "include"
+        });
+        console.log("Estado sesión:" + response.status);
+        if (!response.ok) {
+          window.location.href = "login.html";
+          return;
+        }
+        cargarImagenes();
+        setInterval(cargarImagenes, 30000);
+      } catch (error) {
+        console.error("Error al verificar la sesión:", error);
+        window.location.href = "login.html";
+      }
+    });
+
+    async function cargarImagenes() {
+      try {
+        const res = await fetch(`http://localhost:8080/api/imagenes/${sector}`, {
+          credentials: "include"
+        });
+        
+        if (!res.ok) {
+          throw new Error(`Error HTTP: ${res.status}`);
+        }
+        
+        const imagenesData = await res.json();
+        
+        if (imagenesData.length === 0) {
+          document.getElementById("imagenes").innerHTML = `
+            <div class="mensaje-error">No hay imágenes disponibles para este sector</div>
+          `;
+          return;
+        }
+        
+        // Guardar las rutas para el carrusel
+        imagenes = imagenesData.map(imagen => 'http://localhost:8080' + imagen.ruta);
+        
+        // Si es la primera carga, empezar desde la primera imagen
+        if (indiceActual === 0 || indiceActual >= imagenes.length) {
+          indiceActual = 0;
+        }
+        
+        // Mostrar la imagen actual
+        mostrarImagenPantallaCompleta();
+        
+        // Iniciar autoplay automático si hay más de una imagen
+        if (imagenes.length > 1) {
+          iniciarAutoplay();
+        }
+        
+      } catch (error) {
+        console.error("Error al cargar imágenes:", error);
+        document.getElementById("imagenes").innerHTML = `
+          <div class="mensaje-error">Error al cargar las imágenes</div>
+        `;
+      }
+    }
+
+    function mostrarImagenPantallaCompleta() {
+      if (imagenes.length === 0) return;
+      
+      const contenedor = document.getElementById("imagenes");
+      
+      // Crear nueva imagen
+      const img = document.createElement("img");
+      img.className = 'imagen-pantalla-completa';
+      img.src = imagenes[indiceActual];
+      
+      img.onerror = function() {
+        console.error('Error al cargar imagen:', this.src);
+        // Si hay error, intentar con la siguiente imagen
+        if (imagenes.length > 1) {
+          indiceActual = (indiceActual + 1) % imagenes.length;
+          setTimeout(mostrarImagenPantallaCompleta, 1000);
+        }
+      };
+      
+      // Limpiar contenedor y agregar nueva imagen
+      contenedor.innerHTML = '';
+      contenedor.appendChild(img);
+    }
+
+    function imagenSiguiente() {
+      if (imagenes.length === 0) return;
+      indiceActual = (indiceActual + 1) % imagenes.length;
+      mostrarImagenPantallaCompleta();
+    }
+
+    function iniciarAutoplay() {
+      // Limpiar intervalo anterior si existe
+      if (autoplayInterval) {
+        clearInterval(autoplayInterval);
+      }
+      
+      // Iniciar nuevo autoplay solo si hay más de una imagen
+      if (imagenes.length > 1) {
+        autoplayInterval = setInterval(imagenSiguiente, 5000); // Cambia cada 5 segundos
+      }
+    }
+
+    // Limpiar intervalo cuando se cierra la página
+    window.addEventListener('beforeunload', function() {
+      if (autoplayInterval) {
+        clearInterval(autoplayInterval);
+      }
+    });
+  </script>
+</body>
+</html>
