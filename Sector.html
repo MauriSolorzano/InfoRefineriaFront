@@ -158,13 +158,11 @@
         clearInterval(autoplayInterval);
       }
       
-      // Iniciar nuevo autoplay solo si hay más de una imagen
       if (imagenes.length > 1) {
-        autoplayInterval = setInterval(imagenSiguiente, 5000); // Cambia cada 5 segundos
+        autoplayInterval = setInterval(imagenSiguiente, 15000); 
       }
     }
 
-    // Limpiar intervalo cuando se cierra la página
     window.addEventListener('beforeunload', function() {
       if (autoplayInterval) {
         clearInterval(autoplayInterval);

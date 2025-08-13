@@ -2,31 +2,303 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login - Sistema Carrusel</title>
-  <link rel="stylesheet" href="login.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Elementos decorativos de fondo */
+    body::before {
+      content: '';
+      position: absolute;
+      width: 300px;
+      height: 300px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      top: -150px;
+      right: -150px;
+      animation: float 6s ease-in-out infinite;
+    }
+
+    body::after {
+      content: '';
+      position: absolute;
+      width: 200px;
+      height: 200px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 50%;
+      bottom: -100px;
+      left: -100px;
+      animation: float 8s ease-in-out infinite reverse;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-20px) rotate(180deg); }
+    }
+
+    .login-container {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 24px;
+      padding: 48px 40px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 
+        0 25px 50px -12px rgba(0, 0, 0, 0.15),
+        0 0 0 1px rgba(255, 255, 255, 0.1);
+      position: relative;
+      z-index: 10;
+      animation: slideUp 0.8s ease-out;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .logo {
+      width: 80px;
+      height: auto;
+      margin: 0 auto 32px;
+      display: block;
+      filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+    }
+
+    .login-form h2 {
+      font-size: 28px;
+      font-weight: 600;
+      color: #1a1a1a;
+      text-align: center;
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+      color: #6b7280;
+      text-align: center;
+      margin-bottom: 32px;
+      font-size: 15px;
+      font-weight: 400;
+    }
+
+    .input-group {
+      position: relative;
+      margin-bottom: 24px;
+    }
+
+    .input-group input {
+      width: 100%;
+      padding: 16px 20px;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      font-size: 16px;
+      background: #fafafa;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      outline: none;
+    }
+
+    .input-group input:focus {
+      border-color: #667eea;
+      background: white;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+    }
+
+    .input-group input::placeholder {
+      color: #9ca3af;
+      font-weight: 400;
+    }
+
+    .login-button {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+
+    .login-button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s;
+    }
+
+    .login-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    }
+
+    .login-button:hover::before {
+      left: 100%;
+    }
+
+    .login-button:active {
+      transform: translateY(0);
+    }
+
+    /* Estados de carga */
+    .login-button:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top: 2px solid white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 8px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .error-message {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #dc2626;
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      display: none;
+      animation: shake 0.5s ease-in-out;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+
+    /* Responsivo */
+    @media (max-width: 480px) {
+      .login-container {
+        margin: 20px;
+        padding: 32px 24px;
+        border-radius: 20px;
+      }
+      
+      .login-form h2 {
+        font-size: 24px;
+      }
+    }
+
+    /* Mejoras de accesibilidad */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
 </head>
 <body>
   <div class="login-container">
-    <img src="img/refineria_del_centro2.png" alt="Marca" class="logo">
+    <img src="img/refineria_del_centro2.png" alt="Refinería del Centro" class="logo">
     <form class="login-form" id="loginForm">
-      <h2>Iniciar Sesión</h2>
-      <input type="text" name="username" placeholder="Usuario" required>
-      <input type="password" name="password" placeholder="Contraseña" required>
-      <button type="submit">Ingresar</button>
+      <h2>Bienvenido</h2>
+      <p class="subtitle">Inicia sesión en tu cuenta</p>
+      
+      <div class="error-message" id="errorMessage"></div>
+      
+      <div class="input-group">
+        <input type="text" name="username" placeholder="Usuario" required autocomplete="username">
+      </div>
+      
+      <div class="input-group">
+        <input type="password" name="password" placeholder="Contraseña" required autocomplete="current-password">
+      </div>
+      
+      <button type="submit" class="login-button" id="loginButton">
+        <span id="buttonText">Iniciar Sesión</span>
+      </button>
     </form>
   </div>
 
   <script>
-
     document.addEventListener("DOMContentLoaded", () => {
       const form = document.getElementById("loginForm");
+      const button = document.getElementById("loginButton");
+      const buttonText = document.getElementById("buttonText");
+      const errorMessage = document.getElementById("errorMessage");
+
+      // Función para mostrar error
+      function showError(message) {
+        errorMessage.textContent = message;
+        errorMessage.style.display = 'block';
+        setTimeout(() => {
+          errorMessage.style.display = 'none';
+        }, 5000);
+      }
+
+      // Función para mostrar estado de carga
+      function setLoading(loading) {
+        if (loading) {
+          button.disabled = true;
+          buttonText.innerHTML = '<span class="loading"></span>Iniciando sesión...';
+        } else {
+          button.disabled = false;
+          buttonText.textContent = 'Iniciar Sesión';
+        }
+      }
 
       form.addEventListener("submit", async (event) => {
-        event.preventDefault(); 
-        console.log("Enviando login");
+        event.preventDefault();
+        
+        const username = form.username.value.trim();
+        const password = form.password.value.trim();
 
-        const username = form.username.value;
-        const password = form.password.value;
+        if (!username || !password) {
+          showError("Por favor, completa todos los campos");
+          return;
+        }
+
+        setLoading(true);
+        errorMessage.style.display = 'none';
 
         try {
           const response = await fetch("http://localhost:8080/api/login", {
@@ -36,23 +308,37 @@
             },
             credentials: "include",
             body: JSON.stringify({
-               username: username,
-               password: password,
-              }),
+              username: username,
+              password: password,
+            }),
           });
 
-          if (response.ok){
-            window.location.href = "panel.html";
-          }else{
-            alert("Usuario o contraseña incorrectos");
+          if (response.ok) {
+            // Pequeña pausa para mostrar el éxito antes de redirigir
+            buttonText.textContent = '¡Éxito!';
+            setTimeout(() => {
+              window.location.href = "panel.html";
+            }, 500);
+          } else {
+            const errorData = await response.json().catch(() => ({}));
+            showError(errorData.message || "Usuario o contraseña incorrectos");
           }
         } catch (error) {
           console.log("Error al iniciar sesión:", error);
-          alert("Error al iniciar sesión. Por favor, inténtalo de nuevo más tarde.");
+          showError("Error de conexión. Por favor, inténtalo de nuevo.");
+        } finally {
+          setLoading(false);
         }
       });
+
+      // Limpiar mensajes de error cuando el usuario empiece a escribir
+      const inputs = form.querySelectorAll('input');
+      inputs.forEach(input => {
+        input.addEventListener('input', () => {
+          errorMessage.style.display = 'none';
+        });
+      });
     });
-    
   </script>
 </body>
 </html>
