@@ -1,11 +1,12 @@
 // Variables globales
     let imagenesActuales = [];
     let sectorActual = '';
+    let intervaloActualizacion = null;
 
     // Verificar autenticación al cargar la página
     document.addEventListener("DOMContentLoaded", async() => {
       try {
-        const response = await fetch("http://localhost:8080/api/user", {
+        const response = await fetch("/api/user", {
           credentials: "include"
         });
         console.log("Estado sesión:" + response.status);
@@ -41,7 +42,7 @@
   console.log("Archivo:", archivo.name, "Tipo:", archivo.type);
 
   // Determinar URL
-  let url = 'http://localhost:8080/api/imagenes';
+  let url = '/api/imagenes';
   if (archivo.type === 'application/pdf') {
     url += '/pdf';
     // Crear nuevo FormData para PDF
@@ -103,6 +104,9 @@
     if (!sector) {
         galeria.innerHTML = '';
         contador.style.display = 'none';
+        if(intervaloActualizacion){
+            clearInterval(intervaloActualizacion);
+        }
         return;
     }
 
@@ -111,7 +115,7 @@
     contador.style.display = 'none';
 
     try {
-        const response = await fetch(`http://localhost:8080/api/imagenes/${sector}`, {
+        const response = await fetch(`/api/imagenes/${sector}`, {
             credentials: "include"
         });
 
@@ -139,7 +143,7 @@
             const imagenDiv = document.createElement('div');
             imagenDiv.className = 'imagen-item';
             
-            const urlCompleta = `http://localhost:8080${imagen.ruta}`;
+            const urlCompleta = `/api${imagen.ruta}`;
             
             imagenDiv.innerHTML = `
                 <img src="${urlCompleta}" alt="Imagen ${index + 1}" class="imagen-preview" 
@@ -155,6 +159,12 @@
             galeria.appendChild(imagenDiv);
         });
 
+        if(!intervaloActualizacion){
+            intervaloActualizacion = setInterval(() => {
+                cargarImagenesGestion();
+            }, 30000); // Cada 30 segundos
+        }
+
     } catch (error) {
         console.error('Error al cargar imágenes:', error);
         galeria.innerHTML = '<div class="sin-imagenes">Error al cargar las imágenes del sector</div>';
@@ -169,7 +179,7 @@
     }
 
     try {
-        const response = await fetch(`http://localhost:8080/api/imagenes/${imagenId}`, {
+        const response = await fetch(`/api/imagenes/${imagenId}`, {
             method: 'DELETE',
             credentials: "include"
         });
@@ -225,7 +235,7 @@
     try {
         // 1. Primero obtener todas las imágenes del sector para encontrar el ID
         const sectorSeleccionado = document.getElementById('selectorSectorGestion').value;
-        const responseImagenes = await fetch(`http://localhost:8080/api/imagenes/${sectorSeleccionado}`, {
+        const responseImagenes = await fetch(`/api/imagenes/${sectorSeleccionado}`, {
             credentials: "include"
         });
         
@@ -247,7 +257,7 @@
         }
 
         // 3. Eliminar usando el ID encontrado
-        const response = await fetch(`http://localhost:8080/api/imagenes/${imagen.id}`, {
+        const response = await fetch(`/api/imagenes/${imagen.id}`, {
             method: 'DELETE',
             credentials: "include"
         });
@@ -302,7 +312,7 @@
         mensajeElement.innerHTML = 'Eliminando todas las imágenes...';
     }
     
-    fetch(`http://localhost:8080/api/imagenes/sector/${sector}`, {
+    fetch(`/api/imagenes/sector/${sector}`, {
         method: 'DELETE',
         credentials: "include"
     })
