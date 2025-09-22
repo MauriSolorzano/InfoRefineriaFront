@@ -301,7 +301,7 @@
         errorMessage.style.display = 'none';
 
         try {
-          const response = await fetch("/api/login", {
+          const response = await fetch("http://10.0.0.50:8080/api/login", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
