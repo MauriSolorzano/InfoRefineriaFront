@@ -63,7 +63,7 @@
     // Verificar autenticación antes de cargar imágenes
     document.addEventListener("DOMContentLoaded", async() => {
       try {
-        const response = await fetch("http://localhost:8080/api/user", {
+        const response = await fetch("http://10.0.0.50:8080/api/user", {
           credentials: "include"
         });
         console.log("Estado sesión:" + response.status);
@@ -81,7 +81,7 @@
 
     async function cargarImagenes() {
       try {
-        const res = await fetch(`http://localhost:8080/api/imagenes/${sector}`, {
+        const res = await fetch(`http://10.0.0.50:8080/api/imagenes/${sector}`, {
           credentials: "include"
         });
         
@@ -99,7 +99,7 @@
         }
         
         // Guardar las rutas para el carrusel
-        imagenes = imagenesData.map(imagen => 'http://localhost:8080' + imagen.ruta);
+        imagenes = imagenesData.map(imagen => '/api' + imagen.ruta);
         
         // Si es la primera carga, empezar desde la primera imagen
         if (indiceActual === 0 || indiceActual >= imagenes.length) {
