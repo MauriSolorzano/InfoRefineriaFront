@@ -42,7 +42,7 @@
   console.log("Archivo:", archivo.name, "Tipo:", archivo.type);
 
   // Determinar URL
-  let url = '/api/imagenes';
+  let url = 'http://10.0.0.50:8080/api/imagenes';
   if (archivo.type === 'application/pdf') {
     url += '/pdf';
     // Crear nuevo FormData para PDF
