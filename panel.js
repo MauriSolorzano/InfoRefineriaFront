@@ -6,7 +6,7 @@
     // Verificar autenticación al cargar la página
     document.addEventListener("DOMContentLoaded", async() => {
       try {
-        const response = await fetch("http://10.0.0.50:8080/api/user", {
+        const response = await fetch("/api/user", {
           credentials: "include"
         });
         console.log("Estado sesión:" + response.status);
@@ -42,7 +42,7 @@
   console.log("Archivo:", archivo.name, "Tipo:", archivo.type);
 
   // Determinar URL
-  let url = 'http://10.0.0.50:8080/api/imagenes';
+  let url = '/api/imagenes';
   if (archivo.type === 'application/pdf') {
     url += '/pdf';
     // Crear nuevo FormData para PDF
@@ -115,7 +115,7 @@
     contador.style.display = 'none';
 
     try {
-        const response = await fetch(`http://10.0.0.50:8080/api/imagenes/${sector}`, {
+        const response = await fetch(`/api/imagenes/${sector}`, {
             credentials: "include"
         });
 
@@ -179,7 +179,7 @@
     }
 
     try {
-        const response = await fetch(`http://10.0.0.50:8080/api/imagenes/${imagenId}`, {
+        const response = await fetch(`/api/imagenes/${imagenId}`, {
             method: 'DELETE',
             credentials: "include"
         });
@@ -235,7 +235,7 @@
     try {
         // 1. Primero obtener todas las imágenes del sector para encontrar el ID
         const sectorSeleccionado = document.getElementById('selectorSectorGestion').value;
-        const responseImagenes = await fetch(`http://10.0.0.50:8080/api/imagenes/${sectorSeleccionado}`, {
+        const responseImagenes = await fetch(`/api/imagenes/${sectorSeleccionado}`, {
             credentials: "include"
         });
         
@@ -257,7 +257,7 @@
         }
 
         // 3. Eliminar usando el ID encontrado
-        const response = await fetch(`http://10.0.0.50:8080/api/imagenes/${imagen.id}`, {
+        const response = await fetch(`/api/imagenes/${imagen.id}`, {
             method: 'DELETE',
             credentials: "include"
         });
@@ -312,7 +312,7 @@
         mensajeElement.innerHTML = 'Eliminando todas las imágenes...';
     }
     
-    fetch(`http://10.0.0.50:8080/api/imagenes/sector/${sector}`, {
+    fetch(`/api/imagenes/sector/${sector}`, {
         method: 'DELETE',
         credentials: "include"
     })
