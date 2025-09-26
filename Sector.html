@@ -99,7 +99,7 @@
         }
         
         // Guardar las rutas para el carrusel
-        imagenes = imagenesData.map(imagen => '/api' + imagen.ruta);
+        imagenes = imagenesData.map(imagen => imagen.ruta);
         
         // Si es la primera carga, empezar desde la primera imagen
         if (indiceActual === 0 || indiceActual >= imagenes.length) {
