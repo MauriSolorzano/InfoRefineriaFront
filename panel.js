@@ -143,7 +143,7 @@
             const imagenDiv = document.createElement('div');
             imagenDiv.className = 'imagen-item';
             
-            const urlCompleta = `/api${imagen.ruta}`;
+            const urlCompleta = imagen.ruta;
             
             imagenDiv.innerHTML = `
                 <img src="${urlCompleta}" alt="Imagen ${index + 1}" class="imagen-preview" 
