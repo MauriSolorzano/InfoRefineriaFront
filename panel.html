@@ -150,9 +150,10 @@
         <select name="sector" required>
           <option value="" disabled selected>Seleccionar Sector</option>
           <option value="ENVASE">Envase</option>
-          <option value="PRODUCCION">Producción</option>
+          <option value="PANELISTAS">Panelistas</option>
           <option value="CALIDAD">Calidad</option>
           <option value="MANTENIMIENTO">Mantenimiento</option>
+          <option value="LEVADURA">Levadura</option>
         </select>
         <button type="submit">Subir Imagen</button>
       </form>
@@ -166,15 +167,17 @@
         <button class="boton-sector" onclick="verSector('ENVASE')">
           Ver Sector Envase
         </button>
-        <button class="boton-sector" onclick="verSector('PRODUCCION')">
-          Ver Sector Producción
+        <button class="boton-sector" onclick="verSector('PANELISTAS')">
+          Sector Panelistas
         </button>
         <button class="boton-sector" onclick="verSector('CALIDAD')">
-          Ver Sector Calidad
+          Sector Calidad
         </button>
         <button class="boton-sector" onclick="verSector('MANTENIMIENTO')">
-          Ver Sector Mantenimiento
+          Sector Mantenimiento
         </button>
+        <button class="boton-sector" onclick="verSector('LEVADURA')">
+          Sector Levadura
       </div>
     </div>
 
@@ -185,9 +188,10 @@
         <select id="selectorSectorGestion" onchange="cargarImagenesGestion()">
           <option value="">Seleccionar sector para gestionar</option>
           <option value="ENVASE">Envase</option>
-          <option value="PRODUCCION">Producción</option>
+          <option value="PANELISTAS">Panelistas</option>
           <option value="CALIDAD">Calidad</option>
           <option value="MANTENIMIENTO">Mantenimiento</option>
+          <option value="LEVADURA">Levadura</option>
         </select>
         <button class="boton-refrescar" onclick="cargarImagenesGestion()">🔄 Refrescar</button>
         <button id="btnEliminarTodoSector", class="boton-eliminar-todo" 
