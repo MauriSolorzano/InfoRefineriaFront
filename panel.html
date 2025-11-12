@@ -154,6 +154,7 @@
           <option value="CALIDAD">Calidad</option>
           <option value="MANTENIMIENTO">Mantenimiento</option>
           <option value="LEVADURA">Levadura</option>
+          <option value="LEVADURA_CONTROL">Levadura Control</option>
         </select>
         <button type="submit">Subir Imagen</button>
       </form>
@@ -165,19 +166,24 @@
       <h2>Visualizar Imágenes por Sector</h2>
       <div class="botones-sectores">
         <button class="boton-sector" onclick="verSector('ENVASE')">
-          Ver Sector Envase
+          Envase
         </button>
         <button class="boton-sector" onclick="verSector('PANELISTAS')">
-          Sector Panelistas
+          Panelistas
         </button>
         <button class="boton-sector" onclick="verSector('CALIDAD')">
-          Sector Calidad
+          Calidad
         </button>
         <button class="boton-sector" onclick="verSector('MANTENIMIENTO')">
-          Sector Mantenimiento
+          Mantenimiento
         </button>
         <button class="boton-sector" onclick="verSector('LEVADURA')">
-          Sector Levadura
+          Levadura
+        </button>
+        <button class="boton-sector" onclick="verSector('LEVADURA_CONTROL')">
+          Levadura Control
+        </button>
+
       </div>
     </div>
 
@@ -192,6 +198,7 @@
           <option value="CALIDAD">Calidad</option>
           <option value="MANTENIMIENTO">Mantenimiento</option>
           <option value="LEVADURA">Levadura</option>
+          <option value="LEVADURA_CONTROL">Levadura Control</option>
         </select>
         <button class="boton-refrescar" onclick="cargarImagenesGestion()">🔄 Refrescar</button>
         <button id="btnEliminarTodoSector", class="boton-eliminar-todo" 
