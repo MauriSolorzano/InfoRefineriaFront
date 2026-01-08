@@ -147,14 +147,8 @@
       <h2>Subir Imagen a un Sector</h2>
       <form id="formularioImagen" enctype="multipart/form-data">
         <input type="file" name="imagen" accept="image/*, .pdf" required>
-        <select name="sector" required>
+        <select name="sector" id="selectSectorSubida" required>
           <option value="" disabled selected>Seleccionar Sector</option>
-          <option value="ENVASE">Envase</option>
-          <option value="PANELISTAS">Panelistas</option>
-          <option value="CALIDAD">Calidad</option>
-          <option value="MANTENIMIENTO">Mantenimiento</option>
-          <option value="LEVADURA">Levadura</option>
-          <option value="LEVADURA_CONTROL">Levadura Control</option>
         </select>
         <button type="submit">Subir Imagen</button>
       </form>
@@ -164,26 +158,7 @@
     <!-- Sección de visualización rápida -->
     <div class="seccion seccion-visualizar">
       <h2>Visualizar Imágenes por Sector</h2>
-      <div class="botones-sectores">
-        <button class="boton-sector" onclick="verSector('ENVASE')">
-          Envase
-        </button>
-        <button class="boton-sector" onclick="verSector('PANELISTAS')">
-          Panelistas
-        </button>
-        <button class="boton-sector" onclick="verSector('CALIDAD')">
-          Calidad
-        </button>
-        <button class="boton-sector" onclick="verSector('MANTENIMIENTO')">
-          Mantenimiento
-        </button>
-        <button class="boton-sector" onclick="verSector('LEVADURA')">
-          Levadura
-        </button>
-        <button class="boton-sector" onclick="verSector('LEVADURA_CONTROL')">
-          Levadura Control
-        </button>
-
+      <div class="botones-sectores" id="contenedorBotones">
       </div>
     </div>
 
@@ -192,13 +167,6 @@
       <h2>Gestionar Imágenes</h2>
       <div class="selector-sector">
         <select id="selectorSectorGestion" onchange="cargarImagenesGestion()">
-          <option value="">Seleccionar sector para gestionar</option>
-          <option value="ENVASE">Envase</option>
-          <option value="PANELISTAS">Panelistas</option>
-          <option value="CALIDAD">Calidad</option>
-          <option value="MANTENIMIENTO">Mantenimiento</option>
-          <option value="LEVADURA">Levadura</option>
-          <option value="LEVADURA_CONTROL">Levadura Control</option>
         </select>
         <button class="boton-refrescar" onclick="cargarImagenesGestion()">🔄 Refrescar</button>
         <button id="btnEliminarTodoSector", class="boton-eliminar-todo" 
