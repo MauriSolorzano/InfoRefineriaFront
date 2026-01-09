@@ -303,9 +303,7 @@
         try {
           const response = await fetch("/api/login", {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
+            headers: {"Content-Type": "application/json"},
             credentials: "include",
             body: JSON.stringify({
               username: username,
@@ -314,6 +312,11 @@
           });
 
           if (response.ok) {
+            const data = await response.json();
+
+            localStorage.setItem('plantaID', data.planta);
+            localStorage.setItem('nombrePlanta', data.nombrePlanta);
+            
             buttonText.textContent = '¡Éxito!';
             setTimeout(() => {
               window.location.href = "panel.html";
