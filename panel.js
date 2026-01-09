@@ -1,7 +1,7 @@
 // ==========================================
 // CONFIGURACIÓN LOCAL
 // ==========================================
-const BASE_URL = "http://10.0.0.50";
+const BASE_URL = "http://10.0.0.50:8080";
 const plantaID = localStorage.getItem('plantaID');
 // ==========================================
 
