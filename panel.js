@@ -86,6 +86,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     // 4. Llenar el Select de GESTIÓN
     const selectGestion = document.getElementById('selectorSectorGestion');
     if (selectGestion) {
+        selectGestion.innerHTML = ""; 
+
+        const opcionDefault = document.createElement('option');
+        opcionDefault.value = "";                 
+        opcionDefault.textContent = "Seleccionar Sector..."; 
+        opcionDefault.disabled = true;            
+        opcionDefault.selected = true;            
+        selectGestion.appendChild(opcionDefault);
+
         sectoresAmostrar.forEach(sector => {
             const option = document.createElement('option');
             option.value = sector.id;
