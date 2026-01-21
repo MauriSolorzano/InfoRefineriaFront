@@ -18,6 +18,10 @@ const CONFIG_SECTORES = {
         {id: 'PRODUCCION', nombre: 'Produccion'},
         {id: 'MANTENIMIENTO', nombre: 'Mantenimiento'},
     ],
+    'GRABA': [
+        {id: 'PRODUCCION', nombre: 'Produccion'},
+        {id: 'SECTOR_GRABA', nombre: 'Sector Graba'},
+    ],
     'DEFAULT': []
 }
 
