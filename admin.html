@@ -1,0 +1,1458 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel Administrador</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+    :root {
+      /* Cambio a paleta clara y moderna */
+      --bg: #f8fafc;           /* Fondo blanco/grisáceo muy suave */
+      --surface: #ffffff;      /* Superficie blanca pura */
+      --surface2: #f1f5f9;     /* Gris claro para hovers y fondos secundarios */
+      --border: #e2e8f0;       /* Bordes sutiles */
+      --accent: #2563eb;       /* Azul moderno (similar a Tailwind/Stripe) */
+      --accent2: #10b981;      /* Verde éxito */
+      --warn: #f59e0b;         /* Naranja advertencia */
+      --danger: #ef4444;       /* Rojo peligro */
+      --text: #1e293b;         /* Texto principal oscuro */
+      --text2: #64748b;        /* Texto secundario gris */
+      --text3: #94a3b8;        /* Texto desactivado/labels */
+      --mono: 'IBM Plex Mono', monospace;
+      --sans: 'IBM Plex Sans', sans-serif;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* ─── SIDEBAR ─── */
+    .sidebar {
+      width: 240px;
+      min-height: 100vh;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0;
+      z-index: 100;
+    }
+
+    .sidebar-logo {
+      padding: 28px 24px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-logo .label {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--accent);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .sidebar-logo .title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: 16px 0;
+    }
+
+    .nav-section {
+      padding: 8px 16px 4px;
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 2px;
+      color: var(--text3);
+      text-transform: uppercase;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 24px;
+      cursor: pointer;
+      color: var(--text2);
+      font-size: 14px;
+      font-weight: 400;
+      transition: all 0.15s;
+      border-left: 2px solid transparent;
+      user-select: none;
+    }
+
+    .nav-item:hover { color: var(--accent); background: var(--surface2); }
+
+    .nav-item.active {
+      color: var(--accent);
+      border-left-color: var(--accent);
+      background: rgba(37, 99, 235, 0.05); /* Azul muy tenue */
+    }
+
+    .nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+
+    .sidebar-footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .user-avatar {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 600;
+      color: white;
+    }
+
+    .user-name { font-size: 13px; font-weight: 500; color: var(--text); }
+    .user-role { font-family: var(--mono); font-size: 10px; color: var(--accent); }
+
+    .btn-logout {
+      width: 100%;
+      padding: 8px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text2);
+      font-family: var(--sans);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-logout:hover { border-color: var(--danger); color: var(--danger); background: #fff5f5; }
+
+    /* ─── MAIN ─── */
+    .main {
+      margin-left: 240px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .topbar {
+      padding: 20px 32px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--surface);
+      position: sticky; top: 0; z-index: 50;
+    }
+
+    .page-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .page-subtitle {
+      font-size: 12px;
+      color: var(--text2);
+      font-family: var(--mono);
+      margin-top: 2px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .badge-accent { background: #dbeafe; color: var(--accent); }
+    .badge-success { background: #dcfce7; color: var(--accent2); }
+    .badge-warn { background: #fef3c7; color: var(--warn); }
+    .badge-danger { background: #fee2e2; color: var(--danger); }
+
+    /* ─── SECTIONS ─── */
+    .section {
+      display: none;
+      padding: 32px;
+      animation: fadeIn 0.2s ease;
+    }
+    .section.active { display: block; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ─── CARDS ─── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .card-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #fafafa;
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-body { padding: 20px; }
+
+    /* ─── FORM ─── */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+
+    label {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 1px;
+      color: var(--text2);
+      text-transform: uppercase;
+    }
+
+    input, select, textarea {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 12px;
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 14px;
+      transition: all 0.15s;
+      outline: none;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    select option { background: #ffffff; }
+
+    /* ─── BUTTONS ─── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 18px;
+      border-radius: 6px;
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s;
+    }
+
+    .btn-primary { background: var(--accent); color: white; }
+    .btn-primary:hover { background: #1d4ed8; transform: translateY(-1px); }
+
+    .btn-success { background: var(--accent2); color: white; }
+    .btn-success:hover { background: #059669; }
+
+    .btn-danger { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
+    .btn-danger:hover { background: #fef2f2; }
+
+    .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text2); }
+    .btn-ghost:hover { border-color: var(--text); color: var(--text); background: var(--surface2); }
+
+    .btn-sm { padding: 5px 12px; font-size: 12px; }
+
+    /* ─── TABLE ─── */
+    .table-wrap { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      color: var(--text2);
+      text-transform: uppercase;
+      padding: 10px 16px;
+      text-align: left;
+      border-bottom: 2px solid var(--border);
+      background: #fafafa;
+    }
+
+    td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+      color: var(--text);
+    }
+
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f8fafc; }
+
+    .td-mono { font-family: var(--mono); font-size: 12px; color: var(--accent); }
+
+    /* ─── SECTOR TAGS ─── */
+    .sector-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      background: #ecfdf5;
+      border: 1px solid #d1fae5;
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--accent2);
+      margin: 2px;
+    }
+
+    /* ─── TOAST ─── */
+    #toast-container {
+      position: fixed;
+      bottom: 24px; right: 24px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .toast {
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      min-width: 260px;
+      animation: slideIn 0.3s ease;
+      border-left: 4px solid;
+      background: #ffffff;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+
+    .toast-success { border-color: var(--accent2); color: var(--text); }
+    .toast-error { border-color: var(--danger); color: var(--text); }
+    .toast-info { border-color: var(--accent); color: var(--text); }
+
+    /* ─── MODAL ─── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      width: 100%;
+      max-width: 480px;
+      padding: 28px;
+      animation: fadeIn 0.2s ease;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    .modal-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 20px;
+    }
+
+    /* ─── EMPTY STATE ─── */
+    .empty {
+      text-align: center;
+      padding: 48px 20px;
+      color: var(--text3);
+    }
+    .empty-icon { font-size: 40px; margin-bottom: 12px; }
+    .empty-text { font-size: 14px; }
+
+    /* ─── DIVIDER ─── */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 24px 0;
+    }
+
+    /* ─── STATS ROW ─── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+
+    .stat-label {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: var(--text2);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-family: var(--mono);
+      font-size: 28px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    /* ─── SECTOR SELECTOR EN USUARIO FORM ─── */
+    .sector-selector {
+      display: none;
+    }
+    .sector-selector.visible { display: block; }
+
+    .sector-checkboxes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .sector-checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-size: 13px;
+    }
+
+    .sector-checkbox-item:hover { border-color: var(--accent); background: #f8fafc; }
+    .sector-checkbox-item input[type="checkbox"] { accent-color: var(--accent); }
+
+    /* imagen upload zone */
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: 8px;
+      padding: 32px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: var(--text2);
+      font-size: 13px;
+      background: #fafafa;
+    }
+    .upload-zone:hover { border-color: var(--accent); color: var(--accent); background: #f0f7ff; }
+    .upload-zone .upload-icon { font-size: 32px; margin-bottom: 8px; }
+
+    /* image grid */
+    .image-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .image-card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .image-card img {
+      width: 100%;
+      height: 110px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .image-card-footer {
+      padding: 8px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #fafafa;
+    }
+
+    .image-name {
+      font-size: 11px;
+      color: var(--text2);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100px;
+    }
+</style>
+</head>
+<body>
+
+<!-- ─── SIDEBAR ─── -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="label">Sistema</div>
+    <div class="title">Panel Admin</div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">Gestión</div>
+    <div class="nav-item active" onclick="showSection('plantas')">
+      <span class="icon">🏭</span> Plantas
+    </div>
+    <div class="nav-item" onclick="showSection('sectores')">
+      <span class="icon">📂</span> Sectores
+    </div>
+    <div class="nav-item" onclick="showSection('usuarios')">
+      <span class="icon">👤</span> Usuarios
+    </div>
+    <div class="nav-section">Contenido</div>
+    <div class="nav-item" onclick="showSection('imagenes')">
+      <span class="icon">🖼️</span> Imágenes
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="user-avatar" id="avatarInitial">S</div>
+      <div>
+        <div class="user-name" id="sidebarUsername">—</div>
+        <div class="user-role">SUPERADMIN</div>
+      </div>
+    </div>
+    <button class="btn-logout" onclick="logout()">Cerrar sesión</button>
+  </div>
+</aside>
+
+<!-- ─── MAIN ─── -->
+<main class="main">
+
+  <div class="topbar">
+    <div>
+      <div class="page-title" id="pageTitle">Plantas</div>
+      <div class="page-subtitle" id="pageSubtitle">Gestión de plantas del sistema</div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════
+       SECCIÓN: PLANTAS
+  ════════════════════════════════ -->
+  <section class="section active" id="section-plantas">
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Total Plantas</div>
+        <div class="stat-value" id="statPlantas">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Activas</div>
+        <div class="stat-value" id="statPlantasActivas" style="color:var(--accent2)">—</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">🏭 Listado de plantas</div>
+        <button class="btn btn-primary btn-sm" onclick="abrirModalPlanta()">+ Nueva planta</button>
+      </div>
+      <div class="card-body">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nombre interno</th>
+                <th>Nombre display</th>
+                <th>Estado</th>
+                <th>Creada</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tablaPlantas">
+              <tr><td colspan="6"><div class="empty"><div class="empty-icon">⏳</div><div class="empty-text">Cargando...</div></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════
+       SECCIÓN: SECTORES
+  ════════════════════════════════ -->
+  <section class="section" id="section-sectores">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">🔍 Filtrar por planta</div>
+      </div>
+      <div class="card-body">
+        <div class="form-grid" style="grid-template-columns: 1fr auto;">
+          <div class="form-group">
+            <label>Planta</label>
+            <select id="filtroPlantaSectores" onchange="cargarSectoresPorPlanta()">
+              <option value="">Seleccionar planta...</option>
+            </select>
+          </div>
+          <div style="display:flex;align-items:flex-end;">
+            <button class="btn btn-primary btn-sm" onclick="abrirModalSector()">+ Nuevo sector</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">📂 Sectores</div>
+      </div>
+      <div class="card-body">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nombre interno</th>
+                <th>Nombre display</th>
+                <th>Planta</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tablaSectores">
+              <tr><td colspan="6"><div class="empty"><div class="empty-icon">📂</div><div class="empty-text">Seleccioná una planta para ver sus sectores</div></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════
+       SECCIÓN: USUARIOS
+  ════════════════════════════════ -->
+  <section class="section" id="section-usuarios">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">👤 Usuarios del sistema</div>
+        <button class="btn btn-primary btn-sm" onclick="abrirModalUsuario()">+ Nuevo usuario</button>
+      </div>
+      <div class="card-body">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Username</th>
+                <th>Rol</th>
+                <th>Planta</th>
+                <th>Sectores asignados</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tablaUsuarios">
+              <tr><td colspan="7"><div class="empty"><div class="empty-icon">⏳</div><div class="empty-text">Cargando...</div></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════
+       SECCIÓN: IMÁGENES
+  ════════════════════════════════ -->
+  <section class="section" id="section-imagenes">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">🔍 Seleccionar sector</div>
+      </div>
+      <div class="card-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Planta</label>
+            <select id="filtroPlantaImagenes" onchange="cargarSectoresParaImagenes()">
+              <option value="">Seleccionar planta...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Sector</label>
+            <select id="filtroSectorImagenes" onchange="cargarImagenesAdmin()">
+              <option value="">Seleccionar sector...</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="panelSubidaImagenes" style="display:none;">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">⬆️ Subir imagen</div>
+        </div>
+        <div class="card-body">
+          <div class="upload-zone" onclick="document.getElementById('inputImagenAdmin').click()">
+            <div class="upload-icon">📁</div>
+            <div>Hacé click para seleccionar una imagen o PDF</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:4px;">JPG, PNG, GIF, WEBP, PDF — máx. 10MB</div>
+          </div>
+          <input type="file" id="inputImagenAdmin" accept="image/*,.pdf" style="display:none" onchange="subirImagenAdmin()">
+          <div id="mensajeSubida" style="margin-top:12px;font-size:13px;"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🖼️ Imágenes del sector</div>
+          <span id="contadorImagenesAdmin" class="badge badge-accent"></span>
+        </div>
+        <div class="card-body">
+          <div id="galeriaAdmin">
+            <div class="empty"><div class="empty-icon">🖼️</div><div class="empty-text">No hay imágenes en este sector</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ════════════════════════════════
+     MODAL: NUEVA/EDITAR PLANTA
+════════════════════════════════ -->
+<div class="modal-overlay" id="modalPlanta">
+  <div class="modal">
+    <div class="modal-title">🏭 <span id="modalPlantaTitulo">Nueva planta</span></div>
+    <input type="hidden" id="plantaEditId">
+    <div class="form-group" style="margin-bottom:16px;">
+      <label>Nombre interno (sin espacios, mayúsculas)</label>
+      <input type="text" id="inputNombrePlanta" placeholder="Planta" style="text-transform:uppercase;">
+    </div>
+    <div class="form-group">
+      <label>Nombre para mostrar</label>
+      <input type="text" id="inputNombreDisplayPlanta" placeholder="">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="cerrarModal('modalPlanta')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarPlanta()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     MODAL: NUEVO/EDITAR SECTOR
+════════════════════════════════ -->
+<div class="modal-overlay" id="modalSector">
+  <div class="modal">
+    <div class="modal-title">📂 <span id="modalSectorTitulo">Nuevo sector</span></div>
+    <input type="hidden" id="sectorEditId">
+    <div class="form-group" style="margin-bottom:16px;">
+      <label>Planta</label>
+      <select id="selectPlantaSector"></select>
+    </div>
+    <div class="form-group" style="margin-bottom:16px;">
+      <label>Nombre interno (sin espacios, mayúsculas)</label>
+      <input type="text" id="inputNombreSector" placeholder="ej: ADMINISTRACION" style="text-transform:uppercase;">
+    </div>
+    <div class="form-group">
+      <label>Nombre para mostrar</label>
+      <input type="text" id="inputNombreDisplaySector" placeholder="ej: Administración">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="cerrarModal('modalSector')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarSector()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     MODAL: NUEVO/EDITAR USUARIO
+════════════════════════════════ -->
+<div class="modal-overlay" id="modalUsuario">
+  <div class="modal" style="max-width:540px;">
+    <div class="modal-title">👤 <span id="modalUsuarioTitulo">Nuevo usuario</span></div>
+    <input type="hidden" id="usuarioEditId">
+    <div class="form-grid" style="margin-bottom:16px;">
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="inputUsername" placeholder="ej: jperez">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="inputPassword" placeholder="Mínimo 6 caracteres">
+      </div>
+    </div>
+    <div class="form-grid" style="margin-bottom:16px;">
+      <div class="form-group">
+        <label>Rol</label>
+        <select id="selectRolUsuario" onchange="onRolChange()">
+          <option value="ADMIN_PLANTA">ADMIN_PLANTA</option>
+          <option value="VISOR">VISOR</option>
+          <option value="SUPERADMIN">SUPERADMIN</option>
+        </select>
+      </div>
+      <div class="form-group" id="grupoPlantaUsuario">
+        <label>Planta asignada</label>
+        <select id="selectPlantaUsuario" onchange="cargarSectoresParaUsuario()">
+          <option value="">Sin planta</option>
+        </select>
+      </div>
+    </div>
+    <div class="sector-selector" id="sectorSelectorUsuario">
+      <div class="form-group">
+        <label>Sectores asignados</label>
+        <div class="sector-checkboxes" id="checkboxesSectores"></div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="cerrarModal('modalUsuario')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarUsuario()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── TOAST CONTAINER ─── -->
+<div id="toast-container"></div>
+
+<script>
+const BASE_URL = "http://localhost:8080";
+
+// ─── HELPERS ───
+function getToken() { return localStorage.getItem('token'); }
+
+function fetchAdmin(url, opts = {}) {
+  const isFormData = opts.body instanceof FormData;
+  return fetch(BASE_URL + url, {
+    ...opts,
+    headers: {
+      'Authorization': `Bearer ${getToken()}`,
+      ...(isFormData ? {} : {'Content-Type': 'application/json'}),
+      ...opts.headers
+    }
+  });
+}
+
+function toast(msg, type = 'info') {
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.textContent = msg;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+function showSection(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('section-' + name).classList.add('active');
+  event.currentTarget.classList.add('active');
+
+  const titles = {
+    plantas: ['Plantas', 'Gestión de plantas del sistema'],
+    sectores: ['Sectores', 'Gestión de sectores por planta'],
+    usuarios: ['Usuarios', 'Gestión de usuarios y permisos'],
+    imagenes: ['Imágenes', 'Gestión de contenido por sector']
+  };
+  document.getElementById('pageTitle').textContent = titles[name][0];
+  document.getElementById('pageSubtitle').textContent = titles[name][1];
+}
+
+function abrirModal(id) { document.getElementById(id).classList.add('open'); }
+function cerrarModal(id) { document.getElementById(id).classList.remove('open'); }
+
+// ─── INIT ───
+document.addEventListener('DOMContentLoaded', async () => {
+  const token = getToken();
+  const rol = localStorage.getItem('rol');
+  if (!token || rol !== 'SUPERADMIN') {
+    window.location.href = 'login.html';
+    return;
+  }
+
+  const username = localStorage.getItem('username') || 'Admin';
+  document.getElementById('sidebarUsername').textContent = username;
+  document.getElementById('avatarInitial').textContent = username[0].toUpperCase();
+
+  await cargarPlantas();
+  await cargarUsuarios();
+  poblarSelectoresPlantas();
+});
+
+// ════════════════════════════════
+// PLANTAS
+// ════════════════════════════════
+let plantas = [];
+
+async function cargarPlantas() {
+  try {
+    const res = await fetchAdmin('/api/plantas');
+    plantas = await res.json();
+    renderTablaPlantas();
+    document.getElementById('statPlantas').textContent = plantas.length;
+    document.getElementById('statPlantasActivas').textContent = plantas.filter(p => p.activa).length;
+  } catch (e) {
+    toast('Error al cargar plantas', 'error');
+  }
+}
+
+function renderTablaPlantas() {
+  const tbody = document.getElementById('tablaPlantas');
+  if (!plantas.length) {
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty"><div class="empty-icon">🏭</div><div class="empty-text">No hay plantas creadas</div></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = plantas.map(p => `
+    <tr>
+      <td class="td-mono">#${p.id}</td>
+      <td class="td-mono">${p.nombre}</td>
+      <td>${p.nombreDisplay}</td>
+      <td><span class="badge ${p.activa ? 'badge-success' : 'badge-danger'}">${p.activa ? 'Activa' : 'Inactiva'}</span></td>
+      <td style="color:var(--text2);font-size:12px;">${p.creadaEn ? new Date(p.creadaEn).toLocaleDateString('es-AR') : '—'}</td>
+      <td>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-ghost btn-sm" onclick="editarPlanta(${p.id})">Editar</button>
+          <button class="btn btn-${p.activa ? 'danger' : 'success'} btn-sm" onclick="togglePlanta(${p.id}, ${p.activa})">
+            ${p.activa ? 'Desactivar' : 'Activar'}
+          </button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function abrirModalPlanta() {
+  document.getElementById('plantaEditId').value = '';
+  document.getElementById('inputNombrePlanta').value = '';
+  document.getElementById('inputNombreDisplayPlanta').value = '';
+  document.getElementById('modalPlantaTitulo').textContent = 'Nueva planta';
+  document.getElementById('inputNombrePlanta').disabled = false;
+  abrirModal('modalPlanta');
+}
+
+function editarPlanta(id) {
+  const p = plantas.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('plantaEditId').value = p.id;
+  document.getElementById('inputNombrePlanta').value = p.nombre;
+  document.getElementById('inputNombreDisplayPlanta').value = p.nombreDisplay;
+  document.getElementById('inputNombrePlanta').disabled = true;
+  document.getElementById('modalPlantaTitulo').textContent = 'Editar planta';
+  abrirModal('modalPlanta');
+}
+
+async function guardarPlanta() {
+  const id = document.getElementById('plantaEditId').value;
+  const nombre = document.getElementById('inputNombrePlanta').value.trim().toUpperCase();
+  const nombreDisplay = document.getElementById('inputNombreDisplayPlanta').value.trim();
+
+  if (!nombreDisplay) { toast('Completá el nombre para mostrar', 'error'); return; }
+
+  try {
+    if (id) {
+      await fetchAdmin(`/api/admin/plantas/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ nombreDisplay })
+      });
+      toast('Planta actualizada', 'success');
+    } else {
+      if (!nombre) { toast('Completá el nombre interno', 'error'); return; }
+      await fetchAdmin('/api/admin/plantas', {
+        method: 'POST',
+        body: JSON.stringify({ nombre, nombreDisplay })
+      });
+      toast('Planta creada', 'success');
+    }
+    cerrarModal('modalPlanta');
+    await cargarPlantas();
+    poblarSelectoresPlantas();
+  } catch (e) {
+    toast('Error al guardar planta', 'error');
+  }
+}
+
+async function togglePlanta(id, activa) {
+  try {
+    await fetchAdmin(`/api/admin/plantas/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ activa: !activa })
+    });
+    toast(`Planta ${!activa ? 'activada' : 'desactivada'}`, 'success');
+    await cargarPlantas();
+  } catch (e) {
+    toast('Error', 'error');
+  }
+}
+
+// ════════════════════════════════
+// SECTORES
+// ════════════════════════════════
+async function cargarSectoresPorPlanta() {
+  const plantaId = document.getElementById('filtroPlantaSectores').value;
+  if (!plantaId) return;
+
+  const planta = plantas.find(p => p.id == plantaId);
+  try {
+    const res = await fetchAdmin(`/api/plantas/${planta.nombre}/sectores`);
+    const sectores = await res.json();
+    renderTablaSectores(sectores);
+  } catch (e) {
+    toast('Error al cargar sectores', 'error');
+  }
+}
+
+function renderTablaSectores(sectores) {
+  const tbody = document.getElementById('tablaSectores');
+  if (!sectores.length) {
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty"><div class="empty-icon">📂</div><div class="empty-text">No hay sectores en esta planta</div></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = sectores.map(s => `
+    <tr>
+      <td class="td-mono">#${s.id}</td>
+      <td class="td-mono">${s.nombre}</td>
+      <td>${s.nombreDisplay}</td>
+      <td style="color:var(--text2);font-size:12px;">${s.planta?.nombreDisplay || '—'}</td>
+      <td><span class="badge ${s.activo ? 'badge-success' : 'badge-danger'}">${s.activo ? 'Activo' : 'Inactivo'}</span></td>
+      <td>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-ghost btn-sm" onclick="editarSector(${s.id}, '${s.nombreDisplay}')">Editar</button>
+          <button class="btn btn-${s.activo ? 'danger' : 'success'} btn-sm" onclick="toggleSector(${s.id}, ${s.activo})">
+            ${s.activo ? 'Desactivar' : 'Activar'}
+          </button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function abrirModalSector() {
+  document.getElementById('sectorEditId').value = '';
+  document.getElementById('inputNombreSector').value = '';
+  document.getElementById('inputNombreDisplaySector').value = '';
+  document.getElementById('inputNombreSector').disabled = false;
+  document.getElementById('modalSectorTitulo').textContent = 'Nuevo sector';
+
+  const sel = document.getElementById('selectPlantaSector');
+  sel.innerHTML = plantas.map(p => `<option value="${p.id}">${p.nombreDisplay}</option>`).join('');
+
+  const filtro = document.getElementById('filtroPlantaSectores').value;
+  if (filtro) sel.value = filtro;
+
+  abrirModal('modalSector');
+}
+
+function editarSector(id, nombreDisplay) {
+  document.getElementById('sectorEditId').value = id;
+  document.getElementById('inputNombreDisplaySector').value = nombreDisplay;
+  document.getElementById('inputNombreSector').disabled = true;
+  document.getElementById('modalSectorTitulo').textContent = 'Editar sector';
+  abrirModal('modalSector');
+}
+
+async function guardarSector() {
+  const id = document.getElementById('sectorEditId').value;
+  const nombre = document.getElementById('inputNombreSector').value.trim().toUpperCase();
+  const nombreDisplay = document.getElementById('inputNombreDisplaySector').value.trim();
+  const plantaId = document.getElementById('selectPlantaSector').value;
+
+  if (!nombreDisplay) { toast('Completá el nombre para mostrar', 'error'); return; }
+
+  try {
+    if (id) {
+      await fetchAdmin(`/api/admin/sectores/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ nombreDisplay })
+      });
+      toast('Sector actualizado', 'success');
+    } else {
+      if (!nombre || !plantaId) { toast('Completá todos los campos', 'error'); return; }
+      await fetchAdmin('/api/admin/sectores', {
+        method: 'POST',
+        body: JSON.stringify({ nombre, nombreDisplay, plantaId })
+      });
+      toast('Sector creado', 'success');
+    }
+    cerrarModal('modalSector');
+    await cargarSectoresPorPlanta();
+  } catch (e) {
+    toast('Error al guardar sector', 'error');
+  }
+}
+
+async function toggleSector(id, activo) {
+  try {
+    await fetchAdmin(`/api/admin/sectores/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ activo: !activo })
+    });
+    toast(`Sector ${!activo ? 'activado' : 'desactivado'}`, 'success');
+    await cargarSectoresPorPlanta();
+  } catch (e) {
+    toast('Error', 'error');
+  }
+}
+
+// ════════════════════════════════
+// USUARIOS
+// ════════════════════════════════
+async function cargarUsuarios() {
+  try {
+    const res = await fetchAdmin('/api/admin/usuarios');
+    const usuarios = await res.json();
+    renderTablaUsuarios(usuarios);
+  } catch (e) {
+    toast('Error al cargar usuarios', 'error');
+  }
+}
+
+function renderTablaUsuarios(usuarios) {
+  const tbody = document.getElementById('tablaUsuarios');
+  if (!usuarios.length) {
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty"><div class="empty-icon">👤</div><div class="empty-text">No hay usuarios</div></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = usuarios.map(u => `
+    <tr>
+      <td class="td-mono">#${u.id}</td>
+      <td style="font-weight:500;">${u.username}</td>
+      <td><span class="badge ${u.rol === 'SUPERADMIN' ? 'badge-warn' : u.rol === 'ADMIN_PLANTA' ? 'badge-accent' : 'badge-success'}">${u.rol}</span></td>
+      <td style="color:var(--text2);font-size:12px;">${u.planta?.nombreDisplay || '—'}</td>
+      <td>${(u.sectores || []).map(s => `<span class="sector-tag">${s.nombreDisplay}</span>`).join('') || '<span style="color:var(--text3);font-size:12px;">—</span>'}</td>
+      <td><span class="badge ${u.activo ? 'badge-success' : 'badge-danger'}">${u.activo ? 'Activo' : 'Inactivo'}</span></td>
+      <td>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-ghost btn-sm" onclick="editarUsuario(${u.id})">Editar</button>
+          <button class="btn btn-${u.activo ? 'danger' : 'success'} btn-sm" onclick="toggleUsuario(${u.id}, ${u.activo})">
+            ${u.activo ? 'Desactivar' : 'Activar'}
+          </button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function abrirModalUsuario() {
+  document.getElementById('usuarioEditId').value = '';
+  document.getElementById('inputUsername').value = '';
+  document.getElementById('inputPassword').value = '';
+  document.getElementById('inputPassword').placeholder = 'Mínimo 6 caracteres';
+  document.getElementById('inputUsername').disabled = false;
+  document.getElementById('selectRolUsuario').value = 'ADMIN_PLANTA';
+  document.getElementById('selectPlantaUsuario').value = '';
+  document.getElementById('checkboxesSectores').innerHTML = '';
+  document.getElementById('sectorSelectorUsuario').classList.remove('visible');
+  document.getElementById('modalUsuarioTitulo').textContent = 'Nuevo usuario';
+  abrirModal('modalUsuario');
+}
+
+let usuariosList = [];
+
+async function editarUsuario(id) {
+  try {
+    const res = await fetchAdmin('/api/admin/usuarios');
+    usuariosList = await res.json();
+    const u = usuariosList.find(x => x.id === id);
+    if (!u) return;
+
+    document.getElementById('usuarioEditId').value = u.id;
+    document.getElementById('inputUsername').value = u.username;
+    document.getElementById('inputUsername').disabled = true;
+    document.getElementById('inputPassword').placeholder = 'Dejar vacío para no cambiar';
+    document.getElementById('selectRolUsuario').value = u.rol;
+    document.getElementById('modalUsuarioTitulo').textContent = 'Editar usuario';
+
+    if (u.planta) {
+      document.getElementById('selectPlantaUsuario').value = u.planta.id;
+      await cargarSectoresParaUsuario();
+      // Marcar sectores asignados
+      (u.sectores || []).forEach(s => {
+        const cb = document.getElementById(`cb-sector-${s.id}`);
+        if (cb) cb.checked = true;
+      });
+    }
+    onRolChange();
+    abrirModal('modalUsuario');
+  } catch (e) {
+    toast('Error al cargar usuario', 'error');
+  }
+}
+
+function onRolChange() {
+  const rol = document.getElementById('selectRolUsuario').value;
+  const grupoPlanta = document.getElementById('grupoPlantaUsuario');
+  const sectorSelector = document.getElementById('sectorSelectorUsuario');
+
+  if (rol === 'SUPERADMIN') {
+    grupoPlanta.style.display = 'none';
+    sectorSelector.classList.remove('visible');
+  } else {
+    grupoPlanta.style.display = 'flex';
+    sectorSelector.classList.toggle('visible', rol === 'ADMIN_PLANTA');
+  }
+}
+
+async function cargarSectoresParaUsuario() {
+  const plantaId = document.getElementById('selectPlantaUsuario').value;
+  if (!plantaId) return;
+
+  const planta = plantas.find(p => p.id == plantaId);
+  if (!planta) return;
+
+  try {
+    const res = await fetchAdmin(`/api/plantas/${planta.nombre}/sectores`);
+    const sectores = await res.json();
+    const container = document.getElementById('checkboxesSectores');
+    container.innerHTML = sectores.map(s => `
+      <label class="sector-checkbox-item">
+        <input type="checkbox" id="cb-sector-${s.id}" value="${s.id}">
+        ${s.nombreDisplay}
+      </label>
+    `).join('');
+    document.getElementById('sectorSelectorUsuario').classList.add('visible');
+  } catch (e) {
+    toast('Error al cargar sectores', 'error');
+  }
+}
+
+async function guardarUsuario() {
+  const id = document.getElementById('usuarioEditId').value;
+  const username = document.getElementById('inputUsername').value.trim();
+  const password = document.getElementById('inputPassword').value.trim();
+  const rol = document.getElementById('selectRolUsuario').value;
+  const plantaId = document.getElementById('selectPlantaUsuario').value || null;
+
+  const sectorIds = Array.from(document.querySelectorAll('#checkboxesSectores input:checked'))
+    .map(cb => parseInt(cb.value));
+
+  if (!id && !username) { toast('Ingresá un username', 'error'); return; }
+  if (!id && !password) { toast('Ingresá una contraseña', 'error'); return; }
+
+  const body = { rol, plantaId, sectorIds };
+  if (password) body.password = password;
+  if (!id) body.username = username;
+
+  try {
+    if (id) {
+      await fetchAdmin(`/api/admin/usuarios/${id}`, { method: 'PUT', body: JSON.stringify(body) });
+      toast('Usuario actualizado', 'success');
+    } else {
+      await fetchAdmin('/api/admin/usuarios', { method: 'POST', body: JSON.stringify(body) });
+      toast('Usuario creado', 'success');
+    }
+    cerrarModal('modalUsuario');
+    await cargarUsuarios();
+  } catch (e) {
+    toast('Error al guardar usuario', 'error');
+  }
+}
+
+async function toggleUsuario(id, activo) {
+  try {
+    await fetchAdmin(`/api/admin/usuarios/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ activo: !activo })
+    });
+    toast(`Usuario ${!activo ? 'activado' : 'desactivado'}`, 'success');
+    await cargarUsuarios();
+  } catch (e) {
+    toast('Error', 'error');
+  }
+}
+
+// ════════════════════════════════
+// IMÁGENES
+// ════════════════════════════════
+async function cargarSectoresParaImagenes() {
+  const plantaId = document.getElementById('filtroPlantaImagenes').value;
+  const selSector = document.getElementById('filtroSectorImagenes');
+  selSector.innerHTML = '<option value="">Seleccionar sector...</option>';
+  document.getElementById('panelSubidaImagenes').style.display = 'none';
+  if (!plantaId) return;
+
+  const planta = plantas.find(p => p.id == plantaId);
+  try {
+    const res = await fetchAdmin(`/api/plantas/${planta.nombre}/sectores`);
+    const sectores = await res.json();
+    sectores.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.nombre;
+      opt.textContent = s.nombreDisplay;
+      opt.dataset.planta = planta.nombre;
+      selSector.appendChild(opt);
+    });
+  } catch (e) {
+    toast('Error al cargar sectores', 'error');
+  }
+}
+
+async function cargarImagenesAdmin() {
+  const sector = document.getElementById('filtroSectorImagenes').value;
+  const plantaId = document.getElementById('filtroPlantaImagenes').value;
+  if (!sector || !plantaId) return;
+
+  const planta = plantas.find(p => p.id == plantaId);
+  document.getElementById('panelSubidaImagenes').style.display = 'block';
+
+  try {
+    const res = await fetchAdmin(`/api/imagenes/${sector}?planta=${planta.nombre}`);
+    const imagenes = await res.json();
+    renderGaleriaAdmin(imagenes);
+  } catch (e) {
+    toast('Error al cargar imágenes', 'error');
+  }
+}
+
+function renderGaleriaAdmin(imagenes) {
+  const galeria = document.getElementById('galeriaAdmin');
+  const contador = document.getElementById('contadorImagenesAdmin');
+
+  if (!imagenes.length) {
+    galeria.innerHTML = `<div class="empty"><div class="empty-icon">🖼️</div><div class="empty-text">No hay imágenes en este sector</div></div>`;
+    contador.textContent = '';
+    return;
+  }
+
+  contador.textContent = `${imagenes.length} imagen${imagenes.length !== 1 ? 'es' : ''}`;
+  galeria.innerHTML = `<div class="image-grid">${imagenes.map(img => `
+    <div class="image-card">
+      <img src="${img.urlPublica}" alt="${img.nombreArchivo}"
+           onerror="this.style.display='none'">
+      <div class="image-card-footer">
+        <span class="image-name" title="${img.nombreArchivo}">${img.nombreArchivo}</span>
+        <button class="btn btn-danger btn-sm" onclick="eliminarImagenAdmin(${img.id})">🗑️</button>
+      </div>
+    </div>
+  `).join('')}</div>`;
+}
+
+async function subirImagenAdmin() {
+  const input = document.getElementById('inputImagenAdmin');
+  const archivo = input.files[0];
+  if (!archivo) return;
+
+  const sector = document.getElementById('filtroSectorImagenes').value;
+  const plantaId = document.getElementById('filtroPlantaImagenes').value;
+  const planta = plantas.find(p => p.id == plantaId);
+
+  if (!sector || !planta) { toast('Seleccioná planta y sector primero', 'error'); return; }
+
+  const formData = new FormData();
+  formData.append('imagen', archivo);
+  formData.append('sector', sector);
+  formData.append('planta', planta.nombre);
+
+  const msg = document.getElementById('mensajeSubida');
+  msg.textContent = 'Subiendo...';
+
+  try {
+    const res = await fetchAdmin('/api/imagenes', { method: 'POST', body: formData });
+    if (!res.ok) throw new Error();
+    msg.textContent = '';
+    toast('Imagen subida correctamente', 'success');
+    input.value = '';
+    await cargarImagenesAdmin();
+  } catch (e) {
+    msg.textContent = 'Error al subir la imagen';
+    toast('Error al subir', 'error');
+  }
+}
+
+async function eliminarImagenAdmin(id) {
+  if (!confirm('¿Eliminar esta imagen?')) return;
+  try {
+    await fetchAdmin(`/api/imagenes/${id}`, { method: 'DELETE' });
+    toast('Imagen eliminada', 'success');
+    await cargarImagenesAdmin();
+  } catch (e) {
+    toast('Error al eliminar', 'error');
+  }
+}
+
+// ════════════════════════════════
+// SELECTORES GLOBALES
+// ════════════════════════════════
+function poblarSelectoresPlantas() {
+  const ids = ['filtroPlantaSectores', 'filtroPlantaImagenes', 'selectPlantaUsuario', 'selectPlantaSector'];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const val = el.value;
+    const isFilter = id.startsWith('filtro');
+    el.innerHTML = isFilter
+      ? '<option value="">Seleccionar planta...</option>'
+      : '<option value="">Sin planta</option>';
+    plantas.forEach(p => {
+      if (!p.activa && isFilter) return;
+      const opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = p.nombreDisplay;
+      el.appendChild(opt);
+    });
+    if (val) el.value = val;
+  });
+}
+
+// ─── LOGOUT ───
+function logout() {
+  localStorage.clear();
+  window.location.href = 'login.html';
+}
+</script>
+</body>
+</html>

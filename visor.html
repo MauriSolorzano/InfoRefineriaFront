@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title id="titulo">Visor</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: black;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    /* ════════════════════════════════
+       PANTALLA DE SELECCIÓN
+    ════════════════════════════════ */
+    #pantalla-seleccion {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #0a0f1a;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 40px;
+      z-index: 100;
+    }
+
+    #pantalla-seleccion.visible { display: flex; }
+
+    .sel-header { text-align: center; }
+
+    .sel-label {
+      font-size: 11px;
+      letter-spacing: 4px;
+      color: #4f8ef7;
+      text-transform: uppercase;
+      font-family: monospace;
+      margin-bottom: 10px;
+    }
+
+    .sel-title {
+      font-size: 28px;
+      font-weight: 300;
+      color: #e8eaf0;
+      letter-spacing: -0.5px;
+    }
+
+    .sel-planta {
+      font-size: 14px;
+      color: #8892a4;
+      margin-top: 6px;
+      font-family: monospace;
+    }
+
+    .sel-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      justify-content: center;
+      max-width: 800px;
+      padding: 0 24px;
+    }
+
+    .sel-card {
+      background: #161b27;
+      border: 1px solid #2a3448;
+      border-radius: 12px;
+      padding: 32px 40px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+      min-width: 180px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sel-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(79,142,247,0.08), rgba(56,217,169,0.04));
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .sel-card:hover {
+      border-color: #4f8ef7;
+      transform: translateY(-4px);
+      box-shadow: 0 12px 32px rgba(79,142,247,0.15);
+    }
+
+    .sel-card:hover::before { opacity: 1; }
+
+    .sel-card-icon   { font-size: 36px; margin-bottom: 12px; }
+    .sel-card-nombre { font-size: 16px; font-weight: 600; color: #e8eaf0; margin-bottom: 4px; }
+    .sel-card-slug   { font-family: monospace; font-size: 11px; color: #4a5568; }
+
+    /* ════════════════════════════════
+       CARRUSEL
+    ════════════════════════════════ */
+    #carrusel {
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+      display: none;
+    }
+
+    #carrusel.visible { display: block; }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.8s ease;
+      pointer-events: none;
+    }
+
+    .slide.visible { opacity: 1; pointer-events: auto; }
+
+    .slide img {
+      width: 100vw;
+      height: 100vh;
+      object-fit: contain;
+    }
+
+    /* ─── ESTADO ─── */
+    #estado {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #0a0a0a;
+      color: #444;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: monospace;
+      font-size: 14px;
+      gap: 12px;
+      z-index: 50;
+    }
+
+    #estado.visible { display: flex; }
+    #estado .estado-icon { font-size: 48px; }
+    #estado .estado-msg  { color: #666; }
+
+    /* ─── WS INDICATOR ─── */
+    #ws-indicator {
+      position: fixed;
+      bottom: 16px;
+      right: 16px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: monospace;
+      font-size: 11px;
+      color: #333;
+      opacity: 0;
+      transition: opacity 0.3s;
+      z-index: 60;
+    }
+
+    #ws-indicator.visible { opacity: 1; }
+
+    .ws-dot { width: 6px; height: 6px; border-radius: 50%; background: #333; }
+    .ws-dot.conectado    { background: #22c55e; }
+    .ws-dot.desconectado { background: #ef4444; }
+    .ws-dot.conectando   { background: #f59e0b; animation: pulse 1s infinite; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.3; }
+    }
+
+    /* ─── NOTIF ─── */
+    #notif-update {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(34,197,94,0.15);
+      border: 1px solid rgba(34,197,94,0.3);
+      color: #22c55e;
+      font-family: monospace;
+      font-size: 12px;
+      padding: 8px 16px;
+      border-radius: 6px;
+      opacity: 0;
+      transition: opacity 0.4s;
+      z-index: 60;
+    }
+
+    #notif-update.visible { opacity: 1; }
+  </style>
+</head>
+<body>
+
+<div id="pantalla-seleccion">
+  <div class="sel-header">
+    <div class="sel-label">Cartelería Digital</div>
+    <div class="sel-title">¿Qué sector querés visualizar?</div>
+    <div class="sel-planta" id="selPlanta"></div>
+  </div>
+  <div class="sel-grid" id="selGrid"></div>
+</div>
+
+<div id="carrusel"></div>
+
+<div id="estado">
+  <div class="estado-icon" id="estadoIcon">🖼️</div>
+  <div id="estadoMsg" class="estado-msg">Cargando...</div>
+</div>
+
+<div id="ws-indicator">
+  <div class="ws-dot conectando" id="wsDot"></div>
+  <span id="wsLabel">conectando</span>
+</div>
+
+<div id="notif-update">↻ Imágenes actualizadas</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+
+<script>
+  const BASE_URL          = "http://localhost:8080";
+  const INTERVALO_SLIDE   = 5000;
+  const INTERVALO_POLLING = 5 * 60 * 1000;
+
+  let sectoresDisponibles = [];
+  let sectorActual        = null;
+  let plantaActual        = null;
+  let imagenes            = [];
+  let indiceActual        = 0;
+  let autoplayTimer       = null;
+  let pollingTimer        = null;
+  let stompClient         = null;
+  let wsSubscripcion      = null;
+  let wsReconectarTimer   = null;
+
+  const token        = localStorage.getItem('token');
+  const nombrePlanta = localStorage.getItem('nombrePlanta') || '';
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const sectorURL = urlParams.get('sector');
+  const plantaURL = urlParams.get('planta');
+
+  // ─── INIT (CORREGIDO) ───
+  document.addEventListener('DOMContentLoaded', async () => {
+    if (!token) { window.location.href = 'login.html'; return; }
+
+    document.getElementById('selPlanta').textContent = nombrePlanta;
+    mostrarEstado('⏳', 'Cargando...');
+    conectarWebSocket();
+
+    // Primero cargamos sectores para saber qué mostrar
+    await cargarSectoresUsuario();
+
+    // Si después de cargar NO se activó el selector y hay parámetros, iniciamos visor
+    const selectorActivo = document.getElementById('pantalla-seleccion').classList.contains('visible');
+    if (!selectorActivo && sectorURL && plantaURL) {
+      iniciarVisor(sectorURL, plantaURL);
+    }
+  });
+
+  // ─── CARGAR SECTORES (CORREGIDO Y SEGURO) ───
+  async function cargarSectoresUsuario() {
+    try {
+      const res = await fetch(`${BASE_URL}/api/visor/mis-sectores`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (res.status === 401 || res.status === 403) {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      sectoresDisponibles = await res.json();
+
+      if (!sectoresDisponibles || sectoresDisponibles.length === 0) {
+        mostrarEstado('📂', 'No tenés sectores asignados.');
+        return;
+      }
+
+      // CASO 1: Un solo sector -> ir directo
+      if (sectoresDisponibles.length === 1) {
+        const s = sectoresDisponibles[0];
+        const pNombre = s.planta?.nombre || s.plantaId || localStorage.getItem('plantaID');
+        iniciarVisor(s.nombre, pNombre);
+        return;
+      }
+
+      // CASO 2: Varios sectores -> mostrar selector
+      ocultarEstado();
+      mostrarSelector();
+
+    } catch (e) {
+      console.error('Error:', e);
+      mostrarEstado('⚠️', 'Error al cargar sectores');
+    }
+  }
+
+  // ─── SELECTOR ───
+  function mostrarSelector() {
+    document.getElementById('carrusel').classList.remove('visible');
+    document.getElementById('pantalla-seleccion').classList.add('visible');
+
+    const grid = document.getElementById('selGrid');
+    grid.innerHTML = sectoresDisponibles.map(s => {
+      const pNombre = s.planta?.nombre || s.plantaId || localStorage.getItem('plantaID');
+      return `
+        <div class="sel-card" onclick="elegirSector('${s.nombre}', '${pNombre}')">
+          <div class="sel-card-icon">📺</div>
+          <div class="sel-card-nombre">${s.nombreDisplay}</div>
+          <div class="sel-card-slug">${s.nombre}</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function elegirSector(nombre, planta) {
+    document.getElementById('pantalla-seleccion').classList.remove('visible');
+    // Actualizamos URL para que si recarga, mantenga el sector
+    window.history.pushState({}, '', `?sector=${nombre}&planta=${planta}`);
+    iniciarVisor(nombre, planta);
+  }
+
+  // ─── RESTO DE FUNCIONES (Visor, Carrusel, WS...) ───
+  function iniciarVisor(sector, planta) {
+    sectorActual = sector;
+    plantaActual = planta;
+
+    document.getElementById('titulo').textContent = `Visor — ${sector}`;
+    document.getElementById('pantalla-seleccion').classList.remove('visible');
+    document.getElementById('carrusel').classList.add('visible');
+
+    mostrarEstado('🖼️', 'Cargando imágenes...');
+    cargarImagenes();
+
+    if (pollingTimer) clearInterval(pollingTimer);
+    pollingTimer = setInterval(cargarImagenes, INTERVALO_POLLING);
+
+    suscribirWebSocket(planta, sector);
+  }
+
+  async function cargarImagenes() {
+    if (!sectorActual || !plantaActual) return;
+    try {
+      const res = await fetch(`${BASE_URL}/api/imagenes/${sectorActual}?planta=${plantaActual}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (res.status === 401 || res.status === 403) { window.location.href = 'login.html'; return; }
+      const data = await res.json();
+
+      if (!data || !data.length) {
+        detenerCarrusel();
+        mostrarEstado('🖼️', 'No hay imágenes para este sector');
+        return;
+      }
+
+      const esPrimeraCarga = imagenes.length === 0;
+      imagenes = data.map(img => img.urlPublica);
+      if (indiceActual >= imagenes.length) indiceActual = 0;
+
+      ocultarEstado();
+      renderSlides();
+      if (esPrimeraCarga) iniciarCarrusel();
+
+    } catch (e) {
+      console.error('Error:', e);
+      if (imagenes.length === 0) mostrarEstado('⚠️', 'Error de conexión');
+    }
+  }
+
+  function renderSlides() {
+    const carrusel = document.getElementById('carrusel');
+    carrusel.innerHTML = '';
+    
+    imagenes.forEach((url, i) => {
+      const slide = document.createElement('div');
+      slide.className = 'slide' + (i === indiceActual ? ' visible' : '');
+      slide.id = `slide-${i}`;
+
+      if (url.toLowerCase().endsWith('.pdf')) {
+        const iframe = document.createElement('iframe');
+        iframe.src = `${url}#toolbar=0&navpanes=0`;
+        iframe.style.width = "100vw"; iframe.style.height = "100vh"; iframe.style.border = "none";
+        slide.appendChild(iframe);
+      } else {
+        const img = document.createElement('img');
+        img.src = url;
+        img.onerror = () => { if (i === indiceActual && imagenes.length > 1) siguienteSlide(); };
+        slide.appendChild(img);
+      }
+      carrusel.appendChild(slide);
+    });
+  }
+
+  function iniciarCarrusel() {
+    detenerCarrusel();
+    if (imagenes.length > 1) autoplayTimer = setInterval(siguienteSlide, INTERVALO_SLIDE);
+  }
+
+  function detenerCarrusel() {
+    if (autoplayTimer) { clearInterval(autoplayTimer); autoplayTimer = null; }
+  }
+
+  function siguienteSlide() {
+    if (!imagenes.length) return;
+    const anterior = indiceActual;
+    indiceActual = (indiceActual + 1) % imagenes.length;
+    const prev = document.getElementById(`slide-${anterior}`);
+    const next = document.getElementById(`slide-${indiceActual}`);
+    if (prev) prev.classList.remove('visible');
+    if (next) next.classList.add('visible');
+  }
+
+  function mostrarEstado(icon, msg) {
+    document.getElementById('estadoIcon').textContent = icon;
+    document.getElementById('estadoMsg').textContent  = msg;
+    document.getElementById('estado').classList.add('visible');
+  }
+
+  function ocultarEstado() {
+    document.getElementById('estado').classList.remove('visible');
+  }
+
+  function conectarWebSocket() {
+    setWsEstado('conectando');
+    const socket = new SockJS(`${BASE_URL}/ws`);
+    stompClient = Stomp.over(socket);
+    stompClient.debug = null;
+    stompClient.connect({ Authorization: `Bearer ${token}` }, () => {
+      setWsEstado('conectado');
+      if (sectorActual && plantaActual) suscribirWebSocket(plantaActual, sectorActual);
+    }, () => {
+      setWsEstado('desconectado');
+      wsReconectarTimer = setTimeout(conectarWebSocket, 10000);
+    });
+  }
+
+  function suscribirWebSocket(planta, sector) {
+    if (!stompClient || !stompClient.connected) return;
+    if (wsSubscripcion) wsSubscripcion.unsubscribe();
+    wsSubscripcion = stompClient.subscribe(`/topic/imagenes/${planta}/${sector}`, () => {
+      mostrarNotifUpdate();
+      cargarImagenes();
+    });
+  }
+
+  function setWsEstado(estado) {
+    document.getElementById('wsDot').className = `ws-dot ${estado}`;
+    document.getElementById('wsLabel').textContent = estado;
+  }
+
+  function mostrarNotifUpdate() {
+    const n = document.getElementById('notif-update');
+    n.classList.add('visible');
+    setTimeout(() => n.classList.remove('visible'), 3000);
+  }
+
+  document.addEventListener('mousemove', () => {
+    const ind = document.getElementById('ws-indicator');
+    ind.classList.add('visible');
+    clearTimeout(ind._hideTimer);
+    ind._hideTimer = setTimeout(() => ind.classList.remove('visible'), 3000);
+  });
+</script>
+</body>
+</html>
