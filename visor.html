@@ -228,7 +228,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
 
 <script>
-  const BASE_URL          = "http://localhost:8080";
+  const BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? "http://localhost:8080" 
+    : "http://10.0.0.50:8080";
   const INTERVALO_SLIDE   = 5000;
   const INTERVALO_POLLING = 5 * 60 * 1000;
 
