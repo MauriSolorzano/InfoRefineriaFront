@@ -1,5 +1,5 @@
 //const BASE_URL = "http://10.0.0.50:8080";
-const BASE_URL = "https://10.0.0.50/api";
+const BASE_URL = "https://10.0.0.50";
 const plantaID = localStorage.getItem("plantaID");
 
 // Función helper para hacer fetch con el token JWT
