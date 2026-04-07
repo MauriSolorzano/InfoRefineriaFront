@@ -212,7 +212,7 @@
             <div>Hacé click para seleccionar una imagen o PDF</div>
             <div style="font-size:11px;color:var(--text3);margin-top:4px;">JPG, PNG, GIF, WEBP, PDF — máx. 10MB</div>
           </div>
-          <input type="file" id="inputImagenAdmin" accept="image/*,.pdf" style="display:none" onchange="subirImagenAdmin()">
+          <input type="file" id="inputImagenAdmin" accept="image/*,.pdf" style="display:none" multiple onchange="subirImagenAdmin()">
           <div id="mensajeSubida" style="margin-top:12px;font-size:13px;"></div>
         </div>
       </div>
@@ -333,34 +333,49 @@
 <script>
 const BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? "http://localhost:8080" 
-    : "http://10.0.0.50:8080";
+    : "https://10.0.0.50/api";
 
-function fetchAdmin(url, opts = {}) {
+async function fetchAdmin(url, opts = {}) {
   const isFormData = opts.body instanceof FormData;
-  return fetch(BASE_URL + url, { 
-    ...opts,
-    headers: {
-      'Authorization': `Bearer ${getToken()}`,
-      ...(isFormData ? {} : {'Content-Type': 'application/json'}),
-      ...opts.headers
+  
+  try {
+    const response = await fetch(BASE_URL + url, { 
+      ...opts,
+      headers: {
+        'Authorization': `Bearer ${getToken()}`,
+        ...(isFormData ? {} : {'Content-Type': 'application/json'}),
+        ...opts.headers
+      }
+    });
+
+    // --- ESTA ES LA CLAVE ---
+    if (response.status === 401 || response.status === 403) {
+      console.warn("Sesión expirada o insuficientes permisos.");
+      
+      // Limpiamos todo para evitar bucles de redirección
+      localStorage.clear();
+      
+      // Opcional: mostrar un mensaje antes de salir
+      alert("Tu sesión ha expirado. Por favor, inicia sesión nuevamente.");
+      
+      window.location.href = 'login.html';
+      return new Promise(() => {}); // Retorna una promesa pendiente para detener la ejecución subsiguiente
     }
-  });
+
+    // Si la respuesta no es OK (ej: 500, 400), lanzamos error para que lo atrape el catch de las otras funciones
+    if (!response.ok) {
+        throw new Error(`Error en la petición: ${response.status}`);
+    }
+
+    return response;
+  } catch (error) {
+    console.error("Error en fetchAdmin:", error);
+    throw error; // Re-lanzamos para que los try/catch de cargarPlantas(), etc., funcionen
+  }
 }
 
 // ─── HELPERS ───
 function getToken() { return localStorage.getItem('token'); }
-
-function fetchAdmin(url, opts = {}) {
-  const isFormData = opts.body instanceof FormData;
-  return fetch(BASE_URL + url, {
-    ...opts,
-    headers: {
-      'Authorization': `Bearer ${getToken()}`,
-      ...(isFormData ? {} : {'Content-Type': 'application/json'}),
-      ...opts.headers
-    }
-  });
-}
 
 function toast(msg, type = 'info') {
   const el = document.createElement('div');
@@ -856,8 +871,8 @@ function renderGaleriaAdmin(imagenes) {
 
 async function subirImagenAdmin() {
   const input = document.getElementById('inputImagenAdmin');
-  const archivo = input.files[0];
-  if (!archivo) return;
+  const archivos = Array.from(input.files);  // Todos los archivos seleccionados
+  if (!archivos.length) return;
 
   const sector = document.getElementById('filtroSectorImagenes').value;
   const plantaId = document.getElementById('filtroPlantaImagenes').value;
@@ -865,25 +880,41 @@ async function subirImagenAdmin() {
 
   if (!sector || !planta) { toast('Seleccioná planta y sector primero', 'error'); return; }
 
-  const formData = new FormData();
-  formData.append('imagen', archivo);
-  formData.append('sector', sector);
-  formData.append('planta', planta.nombre);
-
   const msg = document.getElementById('mensajeSubida');
-  msg.textContent = 'Subiendo...';
+  msg.textContent = `Subiendo 0 / ${archivos.length}...`;
 
-  try {
-    const res = await fetchAdmin('/api/imagenes', { method: 'POST', body: formData });
-    if (!res.ok) throw new Error();
-    msg.textContent = '';
-    toast('Imagen subida correctamente', 'success');
-    input.value = '';
-    await cargarImagenesAdmin();
-  } catch (e) {
-    msg.textContent = 'Error al subir la imagen';
-    toast('Error al subir', 'error');
+  let exitosos = 0;
+  let errores = 0;
+
+  for (let i = 0; i < archivos.length; i++) {
+    const archivo = archivos[i];
+    msg.textContent = `Subiendo ${i + 1} / ${archivos.length}... (${archivo.name})`;
+
+    const formData = new FormData();
+    formData.append('imagen', archivo);
+    formData.append('sector', sector);
+    formData.append('planta', planta.nombre);
+
+    try {
+      const res = await fetchAdmin('/api/imagenes', { method: 'POST', body: formData });
+      if (!res.ok) throw new Error();
+      exitosos++;
+    } catch (e) {
+      errores++;
+      console.error(`Error subiendo ${archivo.name}`);
+    }
   }
+
+  msg.textContent = '';
+  input.value = '';
+
+  if (errores === 0) {
+    toast(`✅ ${exitosos} imagen(es) subida(s) correctamente`, 'success');
+  } else {
+    toast(`⚠️ ${exitosos} subidas, ${errores} con error`, 'error');
+  }
+
+  await cargarImagenesAdmin();
 }
 
 async function eliminarImagenAdmin(id) {
