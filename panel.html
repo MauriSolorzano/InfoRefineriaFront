@@ -62,7 +62,7 @@ let imagenAEliminar = null;
 // ─── HELPERS ───
 function getToken()    { return localStorage.getItem('token'); }
 function getUsername() { return localStorage.getItem('username') || '?'; }
-function getPlanta()   { return localStorage.getItem('plantaID'); }
+function getPlanta() { return (localStorage.getItem('plantaID') || '').replace(/ /g, '_'); }
 function getNombrePlanta() { return localStorage.getItem('nombrePlanta') || '—'; }
 
 function fetchPanel(url, opts = {}) {

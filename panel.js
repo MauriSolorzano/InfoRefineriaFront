@@ -308,9 +308,9 @@ async function eliminarImagenPorId(imagenId, nombreArchivo) {
 
   try {
     // CORRECCIÓN: URL Absoluta
-    const response = await fetch(`${BASE_URL}/api/imagenes/${imagenId}`, {
+    const response = await fetchConToken(`${BASE_URL}/api/imagenes/${imagenId}`, {
       method: "DELETE",
-    });
+  });
 
     if (!response.ok) {
       if (response.status === 404) {
