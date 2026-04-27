@@ -62,7 +62,8 @@ let imagenAEliminar = null;
 // ─── HELPERS ───
 function getToken()    { return localStorage.getItem('token'); }
 function getUsername() { return localStorage.getItem('username') || '?'; }
-function getPlanta() { return (localStorage.getItem('plantaID') || '').replace(/ /g, '_'); }
+function getPlanta() { return localStorage.getItem('plantaID') || ''; }
+function getPlantaStorage() { return (localStorage.getItem('plantaID') || '').replace(/ /g, '_'); }  
 function getNombrePlanta() { return localStorage.getItem('nombrePlanta') || '—'; }
 
 function fetchPanel(url, opts = {}) {
@@ -224,7 +225,7 @@ function cambiarSector(nombre, tabEl) {
 
 // ─── CARGAR IMÁGENES ───
 async function cargarImagenes(sector) {
-  const planta = getPlanta();
+  const planta = getPlantaStorage();
   const galeria = document.getElementById(`galeria-${sector}`);
   const counter = document.getElementById(`counter-${sector}`);
 
@@ -278,7 +279,7 @@ async function subirImagen(sector, input) {
     return;
   }
 
-  const planta = getPlanta();
+  const planta = getPlantaStorage();
   const progress = document.getElementById(`progress-${sector}`);
   const progressBar = document.getElementById(`progressbar-${sector}`);
   const progressText = document.getElementById(`progresstext-${sector}`);
