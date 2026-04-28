@@ -367,23 +367,23 @@ function pedirConfirmacion(imagenId, sector) {
 
 function cerrarConfirm() {
   imagenAEliminar = null;
-  sectorEliminar = null;a
+  sectorEliminar = null;
   document.getElementById('modalConfirm').classList.remove('open');
 }
 
 async function confirmarEliminar() {
   if (!imagenAEliminar) return;
 
-  const idAEliminar = imagenAEliminar;      // ← guardar antes de cerrar
+  const idAEliminar = imagenAEliminar;
   const sectorAEliminar = sectorEliminar;
 
   cerrarConfirm();
 
   try {
-    const res = await fetchPanel(`/api/imagenes/${imagenAEliminar}`, { method: 'DELETE' });
+    const res = await fetchPanel(`/api/imagenes/${idAEliminar}`, { method: 'DELETE' }); // ← local
     if (!res.ok) throw new Error();
     toast('Imagen eliminada', 'success');
-    await cargarImagenes(sectorEliminar);
+    await cargarImagenes(sectorAEliminar); // ← local
   } catch (e) {
     toast('Error al eliminar la imagen', 'error');
   }
