@@ -367,12 +367,16 @@ function pedirConfirmacion(imagenId, sector) {
 
 function cerrarConfirm() {
   imagenAEliminar = null;
-  sectorEliminar = null;
+  sectorEliminar = null;a
   document.getElementById('modalConfirm').classList.remove('open');
 }
 
 async function confirmarEliminar() {
   if (!imagenAEliminar) return;
+
+  const idAEliminar = imagenAEliminar;      // ← guardar antes de cerrar
+  const sectorAEliminar = sectorEliminar;
+
   cerrarConfirm();
 
   try {
