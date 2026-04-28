@@ -241,6 +241,7 @@ async function cargarImagenes(sector) {
 
 // ─── RENDER GALERÍA ───
 function renderGaleria(sector, imagenes) {
+  console.log('Primera imagen:', JSON.stringify(imagenes[0]));
   const galeria = document.getElementById(`galeria-${sector}`);
 
   if (!imagenes.length) {
