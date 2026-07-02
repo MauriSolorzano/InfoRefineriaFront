@@ -522,7 +522,7 @@ async function guardarPlanta() {
   try {
     if (id) {
       await fetchAdmin(`/api/admin/plantas/${id}`, {
-        method: 'PUT',
+        method: 'POST',
         body: JSON.stringify({ nombreDisplay })
       });
       toast('Planta actualizada', 'success');
@@ -545,7 +545,7 @@ async function guardarPlanta() {
 async function togglePlanta(id, activa) {
   try {
     await fetchAdmin(`/api/admin/plantas/${id}`, {
-      method: 'PUT',
+      method: 'POST',
       body: JSON.stringify({ activa: !activa })
     });
     toast(`Planta ${!activa ? 'activada' : 'desactivada'}`, 'success');
@@ -632,7 +632,7 @@ async function guardarSector() {
   try {
     if (id) {
       await fetchAdmin(`/api/admin/sectores/${id}`, {
-        method: 'PUT',
+        method: 'POST',
         body: JSON.stringify({ nombreDisplay })
       });
       toast('Sector actualizado', 'success');
@@ -654,7 +654,7 @@ async function guardarSector() {
 async function toggleSector(id, activo) {
   try {
     await fetchAdmin(`/api/admin/sectores/${id}`, {
-      method: 'PUT',
+      method: 'POST',
       body: JSON.stringify({ activo: !activo })
     });
     toast(`Sector ${!activo ? 'activado' : 'desactivado'}`, 'success');
@@ -827,7 +827,7 @@ async function guardarUsuario() {
 
   try {
     if (id) {
-      await fetchAdmin(`/api/admin/usuarios/${id}`, { method: 'PUT', body: JSON.stringify(body) });
+      await fetchAdmin(`/api/admin/usuarios/${id}`, { method: 'POST', body: JSON.stringify(body) });
       if (localStorage.getItem('username') === usuariosList.find(u => u.id == id)?.username) {
         localStorage.setItem('username', username);
         document.getElementById('sidebarUsername').textContent = username;
@@ -848,7 +848,7 @@ async function guardarUsuario() {
 async function toggleUsuario(id, activo) {
   try {
     await fetchAdmin(`/api/admin/usuarios/${id}`, {
-      method: 'PUT',
+      method: 'POST',
       body: JSON.stringify({ activo: !activo })
     });
     toast(`Usuario ${!activo ? 'activado' : 'desactivado'}`, 'success');
