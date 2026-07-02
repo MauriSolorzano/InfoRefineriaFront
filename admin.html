@@ -735,7 +735,7 @@ async function editarUsuario(id) {
 }
 
 function rolUsaSectores(rol) {
-  return rol === 'VISOR';
+  return rol === 'VISOR' || rol === 'ADMIN_PLANTA';
 }
 
 function onRolChange(loadSectores = true) {
