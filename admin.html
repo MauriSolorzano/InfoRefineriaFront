@@ -357,7 +357,7 @@ async function fetchAdmin(url, opts = {}) {
     }
 
     if (response.status === 403) {
-      throw new Error('No tenés permisos para realizar esta acción. Verificá que el usuario tenga rol SUPERADMIN.');
+      throw new Error('El servidor rechazó la operación. Cerrá sesión, iniciá nuevamente e intentá otra vez.');
     }
 
     if (!response.ok) {
