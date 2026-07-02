@@ -336,7 +336,7 @@ const BASE_URL = window.location.hostname === 'localhost' || window.location.hos
     : "https://10.0.0.50";
 
 async function fetchAdmin(url, opts = {}) {
-  const isAdminRequest = url.startsWith('/api/admin/');
+  const isAdminRequest = url.startsWith('/api/admin/') || url.startsWith('/api/admin-actions/');
   const isFormData = opts.body instanceof FormData;
   const headers = {
     ...(isFormData ? {} : {'Content-Type': 'application/json'}),
@@ -400,6 +400,18 @@ async function readErrorMessage(response) {
       return '';
     }
   }
+}
+
+function encodePayload(payload) {
+  const json = JSON.stringify(payload);
+  const bytes = new TextEncoder().encode(json);
+  let binary = '';
+  bytes.forEach(byte => binary += String.fromCharCode(byte));
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function updateAdminResource(resource, id, payload) {
+  return fetchAdmin(`/api/admin-actions/${resource}/${id}/payload/${encodePayload(payload)}`, { method: 'POST' });
 }
 
 // ─── HELPERS ───
@@ -521,10 +533,7 @@ async function guardarPlanta() {
 
   try {
     if (id) {
-      await fetchAdmin(`/api/admin/plantas/${id}`, {
-        method: 'POST',
-        body: JSON.stringify({ nombreDisplay })
-      });
+      await updateAdminResource('plantas', id, { nombreDisplay });
       toast('Planta actualizada', 'success');
     } else {
       if (!nombre) { toast('Completá el nombre interno', 'error'); return; }
@@ -544,10 +553,7 @@ async function guardarPlanta() {
 
 async function togglePlanta(id, activa) {
   try {
-    await fetchAdmin(`/api/admin/plantas/${id}`, {
-      method: 'POST',
-      body: JSON.stringify({ activa: !activa })
-    });
+    await updateAdminResource('plantas', id, { activa: !activa });
     toast(`Planta ${!activa ? 'activada' : 'desactivada'}`, 'success');
     await cargarPlantas();
   } catch (e) {
@@ -631,10 +637,7 @@ async function guardarSector() {
 
   try {
     if (id) {
-      await fetchAdmin(`/api/admin/sectores/${id}`, {
-        method: 'POST',
-        body: JSON.stringify({ nombreDisplay })
-      });
+      await updateAdminResource('sectores', id, { nombreDisplay });
       toast('Sector actualizado', 'success');
     } else {
       if (!nombre || !plantaId) { toast('Completá todos los campos', 'error'); return; }
@@ -653,10 +656,7 @@ async function guardarSector() {
 
 async function toggleSector(id, activo) {
   try {
-    await fetchAdmin(`/api/admin/sectores/${id}`, {
-      method: 'POST',
-      body: JSON.stringify({ activo: !activo })
-    });
+    await updateAdminResource('sectores', id, { activo: !activo });
     toast(`Sector ${!activo ? 'activado' : 'desactivado'}`, 'success');
     await cargarSectoresPorPlanta();
   } catch (e) {
@@ -827,7 +827,7 @@ async function guardarUsuario() {
 
   try {
     if (id) {
-      await fetchAdmin(`/api/admin/usuarios/${id}`, { method: 'POST', body: JSON.stringify(body) });
+      await updateAdminResource('usuarios', id, body);
       if (localStorage.getItem('username') === usuariosList.find(u => u.id == id)?.username) {
         localStorage.setItem('username', username);
         document.getElementById('sidebarUsername').textContent = username;
@@ -847,10 +847,7 @@ async function guardarUsuario() {
 
 async function toggleUsuario(id, activo) {
   try {
-    await fetchAdmin(`/api/admin/usuarios/${id}`, {
-      method: 'POST',
-      body: JSON.stringify({ activo: !activo })
-    });
+    await updateAdminResource('usuarios', id, { activo: !activo });
     toast(`Usuario ${!activo ? 'activado' : 'desactivado'}`, 'success');
     await cargarUsuarios();
   } catch (e) {
