@@ -336,21 +336,29 @@ const BASE_URL = window.location.hostname === 'localhost' || window.location.hos
     : "https://10.0.0.50";
 
 async function fetchAdmin(url, opts = {}) {
+  const isAdminRequest = url.startsWith('/api/admin/');
   const isFormData = opts.body instanceof FormData;
   const headers = {
     ...(isFormData ? {} : {'Content-Type': 'application/json'}),
     ...opts.headers
   };
 
-  if (!url.startsWith('/api/admin/')) {
+  if (!isAdminRequest) {
     headers.Authorization = `Bearer ${getToken()}`;
   }
   
   try {
-    const response = await fetch(BASE_URL + url, { 
+    const fetchOptions = {
       ...opts,
-      headers
-    });
+      headers,
+      cache: 'no-store'
+    };
+
+    if (isAdminRequest) {
+      fetchOptions.credentials = 'omit';
+    }
+
+    const response = await fetch(BASE_URL + url, fetchOptions);
 
     if (response.status === 401) {
       console.warn("Sesión expirada o token inválido.");
@@ -361,7 +369,8 @@ async function fetchAdmin(url, opts = {}) {
     }
 
     if (response.status === 403) {
-      throw new Error('El servidor rechazó la operación. Cerrá sesión, iniciá nuevamente e intentá otra vez.');
+      const details = await readErrorMessage(response);
+      throw new Error(details ? `El servidor rechazó la operación (${details}).` : 'El servidor rechazó la operación.');
     }
 
     if (!response.ok) {
@@ -377,6 +386,19 @@ async function fetchAdmin(url, opts = {}) {
   } catch (error) {
     console.error("Error en fetchAdmin:", error);
     throw error; // Re-lanzamos para que los try/catch de cargarPlantas(), etc., funcionen
+  }
+}
+
+async function readErrorMessage(response) {
+  try {
+    const data = await response.clone().json();
+    return data.error || data.message || '';
+  } catch (_) {
+    try {
+      return (await response.clone().text()).trim();
+    } catch (_) {
+      return '';
+    }
   }
 }
 
