@@ -348,23 +348,25 @@ async function fetchAdmin(url, opts = {}) {
       }
     });
 
-    // --- ESTA ES LA CLAVE ---
-    if (response.status === 401 || response.status === 403) {
-      console.warn("Sesión expirada o insuficientes permisos.");
-      
-      // Limpiamos todo para evitar bucles de redirección
+    if (response.status === 401) {
+      console.warn("Sesión expirada o token inválido.");
       localStorage.clear();
-      
-      // Opcional: mostrar un mensaje antes de salir
       alert("Tu sesión ha expirado. Por favor, inicia sesión nuevamente.");
-      
       window.location.href = 'login.html';
-      return new Promise(() => {}); // Retorna una promesa pendiente para detener la ejecución subsiguiente
+      return new Promise(() => {});
     }
 
-    // Si la respuesta no es OK (ej: 500, 400), lanzamos error para que lo atrape el catch de las otras funciones
+    if (response.status === 403) {
+      throw new Error('No tenés permisos para realizar esta acción. Verificá que el usuario tenga rol SUPERADMIN.');
+    }
+
     if (!response.ok) {
-        throw new Error(`Error en la petición: ${response.status}`);
+      let message = `Error en la petición: ${response.status}`;
+      try {
+        const data = await response.json();
+        message = data.error || data.message || message;
+      } catch (_) {}
+      throw new Error(message);
     }
 
     return response;
@@ -686,6 +688,7 @@ function abrirModalUsuario() {
   document.getElementById('checkboxesSectores').innerHTML = '';
   document.getElementById('sectorSelectorUsuario').classList.remove('visible');
   document.getElementById('modalUsuarioTitulo').textContent = 'Nuevo usuario';
+  onRolChange();
   abrirModal('modalUsuario');
 }
 
@@ -704,24 +707,34 @@ async function editarUsuario(id) {
     document.getElementById('inputPassword').placeholder = 'Dejar vacío para no cambiar';
     document.getElementById('selectRolUsuario').value = u.rol;
     document.getElementById('modalUsuarioTitulo').textContent = 'Editar usuario';
+    document.getElementById('checkboxesSectores').innerHTML = '';
 
     if (u.planta) {
       document.getElementById('selectPlantaUsuario').value = u.planta.id;
+    } else {
+      document.getElementById('selectPlantaUsuario').value = '';
+    }
+
+    onRolChange(false);
+
+    if (rolUsaSectores(u.rol) && u.planta) {
       await cargarSectoresParaUsuario();
-      // Marcar sectores asignados
       (u.sectores || []).forEach(s => {
         const cb = document.getElementById(`cb-sector-${s.id}`);
         if (cb) cb.checked = true;
       });
     }
-    onRolChange();
     abrirModal('modalUsuario');
   } catch (e) {
-    toast('Error al cargar usuario', 'error');
+    toast(e.message || 'Error al cargar usuario', 'error');
   }
 }
 
-function onRolChange() {
+function rolUsaSectores(rol) {
+  return rol === 'VISOR';
+}
+
+function onRolChange(loadSectores = true) {
   const rol = document.getElementById('selectRolUsuario').value;
   const grupoPlanta = document.getElementById('grupoPlantaUsuario');
   const sectorSelector = document.getElementById('sectorSelectorUsuario');
@@ -729,14 +742,23 @@ function onRolChange() {
   if (rol === 'SUPERADMIN') {
     grupoPlanta.style.display = 'none';
     sectorSelector.classList.remove('visible');
+    document.getElementById('selectPlantaUsuario').value = '';
+    document.getElementById('checkboxesSectores').innerHTML = '';
   } else {
     grupoPlanta.style.display = 'flex';
-    sectorSelector.classList.toggle('visible', rol === 'ADMIN_PLANTA');
+    sectorSelector.classList.toggle('visible', rolUsaSectores(rol));
+    if (!rolUsaSectores(rol)) {
+      document.getElementById('checkboxesSectores').innerHTML = '';
+    } else if (loadSectores && document.getElementById('selectPlantaUsuario').value) {
+      cargarSectoresParaUsuario();
+    }
   }
 }
 
 async function cargarSectoresParaUsuario() {
   const plantaId = document.getElementById('selectPlantaUsuario').value;
+  const rol = document.getElementById('selectRolUsuario').value;
+  if (!rolUsaSectores(rol)) return;
   if (!plantaId) return;
 
   const planta = plantas.find(p => p.id == plantaId);
@@ -770,8 +792,10 @@ async function guardarUsuario() {
 
   if (!id && !username) { toast('Ingresá un username', 'error'); return; }
   if (!id && !password) { toast('Ingresá una contraseña', 'error'); return; }
+  if (rol !== 'SUPERADMIN' && !plantaId) { toast('Seleccioná una planta', 'error'); return; }
+  if (rolUsaSectores(rol) && !sectorIds.length) { toast('Seleccioná al menos un sector', 'error'); return; }
 
-  const body = { rol, plantaId, sectorIds };
+  const body = { rol, plantaId: rol === 'SUPERADMIN' ? null : plantaId, sectorIds: rolUsaSectores(rol) ? sectorIds : [] };
   if (password) body.password = password;
   if (!id) body.username = username;
 
@@ -786,7 +810,7 @@ async function guardarUsuario() {
     cerrarModal('modalUsuario');
     await cargarUsuarios();
   } catch (e) {
-    toast('Error al guardar usuario', 'error');
+    toast(e.message || 'Error al guardar usuario', 'error');
   }
 }
 
