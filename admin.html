@@ -703,7 +703,7 @@ async function editarUsuario(id) {
 
     document.getElementById('usuarioEditId').value = u.id;
     document.getElementById('inputUsername').value = u.username;
-    document.getElementById('inputUsername').disabled = true;
+    document.getElementById('inputUsername').disabled = false;
     document.getElementById('inputPassword').placeholder = 'Dejar vacío para no cambiar';
     document.getElementById('selectRolUsuario').value = u.rol;
     document.getElementById('modalUsuarioTitulo').textContent = 'Editar usuario';
@@ -790,18 +790,23 @@ async function guardarUsuario() {
   const sectorIds = Array.from(document.querySelectorAll('#checkboxesSectores input:checked'))
     .map(cb => parseInt(cb.value));
 
-  if (!id && !username) { toast('Ingresá un username', 'error'); return; }
+  if (!username) { toast('Ingresá un username', 'error'); return; }
   if (!id && !password) { toast('Ingresá una contraseña', 'error'); return; }
   if (rol !== 'SUPERADMIN' && !plantaId) { toast('Seleccioná una planta', 'error'); return; }
   if (rolUsaSectores(rol) && !sectorIds.length) { toast('Seleccioná al menos un sector', 'error'); return; }
 
   const body = { rol, plantaId: rol === 'SUPERADMIN' ? null : plantaId, sectorIds: rolUsaSectores(rol) ? sectorIds : [] };
+  body.username = username;
   if (password) body.password = password;
-  if (!id) body.username = username;
 
   try {
     if (id) {
       await fetchAdmin(`/api/admin/usuarios/${id}`, { method: 'PUT', body: JSON.stringify(body) });
+      if (localStorage.getItem('username') === usuariosList.find(u => u.id == id)?.username) {
+        localStorage.setItem('username', username);
+        document.getElementById('sidebarUsername').textContent = username;
+        document.getElementById('avatarInitial').textContent = username[0].toUpperCase();
+      }
       toast('Usuario actualizado', 'success');
     } else {
       await fetchAdmin('/api/admin/usuarios', { method: 'POST', body: JSON.stringify(body) });
